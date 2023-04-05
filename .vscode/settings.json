@@ -1,0 +1,5 @@
+{
+    "files.exclude": {
+        "**/__init__.py": true
+    }
+}

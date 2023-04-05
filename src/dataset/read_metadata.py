@@ -1,13 +1,10 @@
-import os
+import json
 from functools import partial
-from pathlib import Path
 
-import cv2
 import hydra
 from omegaconf import DictConfig
-import json
 
-from helpers import filter_files_by_ext, get_metadata_params, apply_map
+from utils import filter_files_by_ext, get_metadata_params
 
 
 def extract_metadata(src):
@@ -29,6 +26,8 @@ def main(cfg: DictConfig):
 
     # apply_map(extract_metadata, metadata)
 
+    next(metadata)
+    next(metadata)
     next(metadata)
     next(metadata)
     next(metadata)
