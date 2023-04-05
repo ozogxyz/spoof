@@ -13,7 +13,7 @@ from utils import filter_files_by_ext, get_metadata_params
 
 def extract_metadata(src):
     print(f"Extracting metadata from {src}")
-    # TODO ????????
+    # TODO visualize face rectangles and landmark points from the meta
     with open(src) as f:
         yield json.load(f)
 
