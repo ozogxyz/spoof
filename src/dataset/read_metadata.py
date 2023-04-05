@@ -3,7 +3,7 @@ import os
 import sys
 
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 # Add parent directory to path for easy import
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -15,9 +15,7 @@ def extract_metadata(src):
     print(f"Extracting metadata from {src}")
     # TODO ????????
     with open(src) as f:
-        data = json.load(f)
-
-    return data
+        yield json.load(f)
 
 
 # This part is for debugging purposes
@@ -25,18 +23,12 @@ def extract_metadata(src):
 def main(cfg: DictConfig):
     src, dest, ext, meta = get_metadata_params(cfg)
 
-    # videos and metadata are generators
+    # metadata is a generator yielding jsons
     metadata = filter_files_by_ext(src, meta)
+    next(metadata)
+    jsons = extract_metadata(next(metadata))
 
-    # apply_map(extract_metadata, metadata)
-
-    next(metadata)
-    next(metadata)
-    next(metadata)
-    next(metadata)
-    next(metadata)
-
-    print(extract_metadata(next(metadata)))
+    print(jsons.send(None))
 
 
 if __name__ == "__main__":
