@@ -1,7 +1,11 @@
 import os
+import sys
 from typing import Literal
 
 import pytest
+
+# Add parent directory to path for easy import
+# sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 
 from src.dataset.capture_frames import capture_frames
 from src.utils import filter_files_by_ext
