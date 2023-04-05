@@ -1,5 +1,4 @@
 import os
-
 import sys
 from functools import partial
 from pathlib import Path
@@ -32,6 +31,8 @@ def capture_frames(src: str, dest: str) -> None:
             ret, frame = cap.read()
             if not ret:
                 break
+            # TODO use pathlib
+            # TODO extract location?
             cv2.imwrite(os.path.join(dest, "frame%d.jpg" % cur_frame), frame)
             cur_frame += 1
         cap.release()
@@ -40,6 +41,7 @@ def capture_frames(src: str, dest: str) -> None:
     cv2.destroyAllWindows()
 
 
+# This part is for debugging purposes
 @hydra.main(version_base="1.2", config_path="../../", config_name="config")
 def main(cfg: DictConfig):
     # quick check for casia

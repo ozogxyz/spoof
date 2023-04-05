@@ -1,8 +1,10 @@
 from pathlib import Path
+from typing import Callable, Iterable
 
+from omegaconf import DictConfig
 
 # Helper functions
-def get_video_params(cfg):
+def get_video_params(cfg: DictConfig):
     src = cfg.dataset.src
     dest = cfg.dataset.dest
     ext = cfg.dataset.ext
@@ -10,7 +12,7 @@ def get_video_params(cfg):
     return src, dest, ext
 
 
-def get_metadata_params(cfg):
+def get_metadata_params(cfg: DictConfig):
     src = cfg.dataset.src
     dest = cfg.dataset.dest
     ext = cfg.dataset.ext
@@ -19,10 +21,10 @@ def get_metadata_params(cfg):
     return src, dest, ext, meta
 
 
-def filter_files_by_ext(path, ext):
-    for path in Path(path).rglob(f"*{ext}"):
+def filter_files_by_ext(path: str, ext: str):
+    for path in Path(path).rglob(f"*{ext}"):  # type: ignore
         yield str(path)
 
 
-def apply_map(func, iterable):
+def apply_map(func: Callable, iterable: Iterable):
     return list(map(func, iterable))

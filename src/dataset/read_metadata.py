@@ -1,28 +1,32 @@
 import json
-from functools import partial
+import os
+import sys
 
 import hydra
 from omegaconf import DictConfig
+
+# Add parent directory to path for easy import
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from utils import filter_files_by_ext, get_metadata_params
 
 
 def extract_metadata(src):
     print(f"Extracting metadata from {src}")
+    # TODO ????????
     with open(src) as f:
         data = json.load(f)
 
     return data
 
 
+# This part is for debugging purposes
 @hydra.main(version_base="1.2", config_path="../../", config_name="config")
 def main(cfg: DictConfig):
     src, dest, ext, meta = get_metadata_params(cfg)
 
     # videos and metadata are generators
     metadata = filter_files_by_ext(src, meta)
-
-    casia_metadata = partial(extract_metadata, dest=dest)
 
     # apply_map(extract_metadata, metadata)
 
@@ -32,8 +36,7 @@ def main(cfg: DictConfig):
     next(metadata)
     next(metadata)
 
-    d = extract_metadata(next(metadata))
-    print(d)
+    print(extract_metadata(next(metadata)))
 
 
 if __name__ == "__main__":
