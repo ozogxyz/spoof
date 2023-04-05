@@ -1,6 +1,6 @@
 dataset:
   name: casia
-  src: /Users/motorbreath/mipt/thesis/datasets/casia/
-  dest: /Users/motorbreath/mipt/thesis/code/spoof/tmp/
+  src:  ${oc.env:HOME}/mipt/thesis/datasets/casia/
+  dest:  ${oc.env:USER}/mipt/thesis/code/spoof/tmp/
   ext: .avi
   meta: .json
