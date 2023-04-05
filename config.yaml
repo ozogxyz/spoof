@@ -1,4 +1,6 @@
 dataset:
+  name: casia
   src: /Users/motorbreath/mipt/thesis/datasets/casia/
   dest: /tmp/train/
   ext: .avi
+  meta: .json
