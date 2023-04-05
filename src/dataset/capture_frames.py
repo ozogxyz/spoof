@@ -1,15 +1,14 @@
-import functools
 import os
+from functools import partial
+
 import cv2
 import hydra
-
-from pathlib import Path
-
+from helpers import apply_map, filter_files_by_ext, get_video_params
 from omegaconf import DictConfig
 
 
 # Function to extract frames
-def capture_frames(src, dest):
+def capture_frames(src: str, dest: str) -> None:
     """Captures video frames from root src and saves them to dest folder."""
     print(f"Capturing frames from {src} to {dest}")
     cap = cv2.VideoCapture(src)
@@ -27,23 +26,16 @@ def capture_frames(src, dest):
     cv2.destroyAllWindows()
 
 
-def filter_files_by_ext(path, ext):
-    for path in Path(path).rglob(f"*{ext}"):
-        yield str(path)
-
-
 @hydra.main(version_base="1.2", config_path="../../", config_name="config")
 def main(cfg: DictConfig):
-    src = cfg.dataset.src
-    dest = cfg.dataset.dest
-    ext = cfg.dataset.ext
-    meta = cfg.dataset.meta
+    src, dest, ext = get_video_params(cfg)
 
+    # videos and metadata are generators
     videos = filter_files_by_ext(src, ext)
-    meta = filter_files_by_ext(src, meta)
+    casia_capturer = partial(capture_frames, dest=dest)
 
-    capture_casia = functools.partial(capture_frames, dest=dest)
-    casia_frames = list(map(capture_casia, videos))
+    # apply capturer to all videos
+    apply_map(casia_capturer, videos)
 
 
 if __name__ == "__main__":
