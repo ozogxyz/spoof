@@ -9,9 +9,9 @@ from src.utils import filter_files_by_ext
 
 @pytest.mark.skip(reason="Creates zillions of files")
 def test_capture():
-    src = "/Users/motorbreath/mipt/thesis/datasets/casia/casia-mfsd_train_renamed/data/train/001M/C001_HR_E1_IN_TG_00D_PT+HR+1_0_1.avi"
-    dest = "/Users/motorbreath/mipt/thesis/code/spoof/tmp/frames"
-    frame_chk = "/Users/motorbreath/mipt/thesis/code/spoof/tmp/frame1.jpg"
+    src = "sample/test.avi"
+    dest = "sample/frames"
+    frame_chk = "sample/frames/frame1.jpg"
 
     capture_frames(src=src, dest=dest)
 
@@ -20,7 +20,7 @@ def test_capture():
 
 @pytest.mark.parametrize("ext", [".avi", ".json"])
 def test_filter_files_by_ext(ext: Literal[".avi", ".json"]):
-    path = "/Users/motorbreath/mipt/thesis/datasets/casia/casia-mfsd_train_renamed/data/train/001M/"
+    path = "sample/"
     videos = filter_files_by_ext(path, ext)
 
-    assert all(filter(lambda x: x.endswith(ext), videos))
+    assert all(filter(lambda x: x.endswith(ext), videos))  # type: ignore
