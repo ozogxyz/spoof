@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from utils import filter_files_by_ext, get_metadata_params
 
 
-def extract_metadata(src):
+def read_metadata(src):
     print(f"Extracting metadata from {src}")
     # TODO visualize face rectangles and landmark points from the meta
     with open(src) as f:
@@ -26,7 +26,9 @@ def main(cfg: DictConfig):
     # metadata is a generator yielding jsons
     metadata = filter_files_by_ext(src, meta)
     next(metadata)
-    jsons = extract_metadata(next(metadata))
+    next(metadata)
+    next(metadata)
+    jsons = read_metadata(next(metadata))
 
     print(jsons.send(None))
 
