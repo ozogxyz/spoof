@@ -1,7 +1,8 @@
 #project specific
-.DS_Store
-outputs/
+**/*.DS_Store
+**/outputs/
 .vscode/
+/tests/sample/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
