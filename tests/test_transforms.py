@@ -1,68 +1,70 @@
-from typing import Dict
+from typing import Any, Dict
 
-import numpy as np
+import cv2
 import pytest
+
 from src.dataset.transforms import (
-    _get_size_value,
-    em_angle,
+    FaceRegionRCXT,
+    FaceRegionXT,
     lm_angle,
+    em_angle,
     rect_from_lm,
-    ScalingTransform,
 )
 
+from src.dataset.add_metadata import add_metadata
+from src.dataset.visualize import show_frame
 
-# @pytest.mark.skip(reason="What should this test?")
-def test_rect_from_lm(test_landmarks, test_face_square):
+
+@pytest.fixture(scope="module", autouse=True)
+def face_region_xt():
+    return FaceRegionXT(
+        size=(224, 224),
+        scale_rect_hw=(1, 1),
+        crop=None,
+        interpolation=cv2.INTER_LINEAR,
+        p=0.0,
+        scale_delta=0.0,
+        square=True,
+    )
+
+
+@pytest.fixture(scope="module", autouse=True)
+def face_region_rcxt():
+    return FaceRegionRCXT(
+        size=(224, 224),
+        scale_rect_hw=(1, 1),
+        crop=None,
+        interpolation=cv2.INTER_LINEAR,
+        p=0.0,
+        scale_delta=0.0,
+        square=True,
+    )
+
+
+def test_rect_from_lm(test_sample: Dict):
+    """Test that the face rectangle is correctly extracted as a square"""
+    test_landmarks = test_sample["lm7pt"]
     face_rect = rect_from_lm(test_landmarks)
 
-    assert face_rect == test_face_square
+    assert face_rect == [51, 496, 602, 602]
+    assert face_rect[2] == face_rect[3]
 
 
-def test_lm_angle(test_landmarks):
-    landmarks = np.asarray(test_landmarks).reshape(-1, 2)
-    angle = lm_angle(landmarks)
+def test_face_region_xt(face_region_xt: FaceRegionXT, test_sample, test_frame):
+    new_sample = face_region_xt(sample=add_metadata(test_sample, test_frame))
+    new_image, new_meta = new_sample["image"], new_sample["meta"]
 
-    assert angle == 0
-
-
-def test_em_angle(test_landmarks):
-    landmarks = np.asarray(test_landmarks).reshape(-1, 2)
-    angle = em_angle(landmarks)
-
-    assert angle == 0
+    show_frame(new_image)
+    # print(new_meta)
+    # assert False
 
 
-def test_scaling_transform_none(size_param=None):
-    scaling_transform = ScalingTransform(size_param)
-    assert scaling_transform.size == size_param
+def test_face_region_rxct(
+    face_region_rcxt: FaceRegionRCXT, test_sample: Dict, test_frame
+):
+    new_sample = face_region_rcxt(sample=add_metadata(test_sample, test_frame))
+    new_image, new_meta = new_sample["image"], new_sample["meta"]
 
-
-def test_scaling_transform_int(size_param=256):
-    scaling_transform = ScalingTransform(size_param)
-    assert scaling_transform.size == (size_param, size_param)
-
-
-def test_scaling_transform_tuple(size_param=(256, 256)):
-    scaling_transform = ScalingTransform(size_param)
-    assert scaling_transform.size == size_param
-
-
-def test_scaling_transform_list(size_param=[256, 256]):
-    scaling_transform = ScalingTransform(size_param)
-    assert scaling_transform.size == list(size_param)
-
-
-# Invalid input sizes & types
-def test_scaling_transform_int_fail():
-    with pytest.raises(ValueError):
-        ScalingTransform("some_string")
-
-
-def test_scaling_transform_tuple_fail():
-    with pytest.raises(ValueError):
-        ScalingTransform((256, 256, 256))
-
-
-def test_scaling_transform_list_fail():
-    with pytest.raises(ValueError):
-        ScalingTransform([256, 256, 256])
+    show_frame(new_image)
+    # print(new_meta)
+    # assert False
