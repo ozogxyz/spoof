@@ -18,6 +18,6 @@ setup(
         "torchvision==0.15.1",
     ],
     extras_require={
-        "dev": ["black==21.5b2", "pre-commit==2.13.0"],
+        "dev": ["black==21.5b2", "pre-commit==2.13.0", "docformatter"],
     },
 )
