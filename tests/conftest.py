@@ -49,3 +49,33 @@ def test_frame_details():
         "feedback": 0,
         "review_status": 1,
     }
+
+
+@pytest.fixture(scope="module", autouse=True)
+def test_face_rect():
+    return [73, 238, 568, 986]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def test_face_square():
+    return [51, 496, 602, 602]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def test_landmarks():
+    return [
+        148,
+        616,
+        264,
+        626,
+        450,
+        630,
+        564,
+        616,
+        357,
+        806,
+        232,
+        968,
+        465,
+        976,
+    ]
