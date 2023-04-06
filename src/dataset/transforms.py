@@ -6,6 +6,13 @@ import warnings
 import cv2
 import numpy as np
 
+# TODO:
+""" 
+    1. Use MetaAddLMRect to make rect -> square and add to metadata 
+    2. Use RCXT to frontalize face using landmarks
+    3. Use RCXT to crop face to 224 x 224
+    4. Update metadata with new landmarks
+"""
 
 # get face rectangle from landmarks
 def rect_from_lm(landmarks: List[int], scale: int = 1) -> List[int]:
@@ -67,6 +74,7 @@ def lm_angle(lms: np.ndarray) -> float:
 
 
 def em_angle(lms: np.ndarray) -> float:
+    """Calculate angle between eyes and mouth."""
     if lms.shape[0] == 7:
         eye_center = (lms[:2].mean(axis=0) + lms[2:4].mean(axis=0)) / 2
     elif (
