@@ -1,23 +1,18 @@
 import os
-import sys
 from typing import Literal
 
 import pytest
-
-# Add parent directory to path for easy import
-# sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 
 from src.dataset.capture_frames import capture_frames
 from src.utils import filter_files_by_ext
 
 
 @pytest.mark.skip(reason="Creates zillions of files")
-def test_capture():
-    src = "sample/test.avi"
+def test_capture(test_video: Literal['tests/sample/test.avi']):
     dest = "sample/frames"
     frame_chk = "sample/frames/frame1.jpg"
 
-    capture_frames(src=src, dest=dest)
+    capture_frames(src=test_video, dest=dest)
 
     assert os.path.exists(frame_chk)
 
