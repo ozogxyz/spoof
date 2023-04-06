@@ -7,6 +7,12 @@ from src.dataset.capture_frames import capture_frames
 from src.utils import filter_files_by_ext
 
 
+# sample video for testing
+@pytest.fixture(scope="module", autouse=True)
+def test_video():
+    return "tests/sample/test.avi"
+
+
 @pytest.mark.skip(reason="Creates zillions of files")
 def test_capture(test_video: Literal['tests/sample/test.avi']):
     dest = "sample/frames"
