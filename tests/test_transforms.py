@@ -11,74 +11,22 @@ from src.dataset.transforms import (
 )
 
 
-@pytest.mark.skip(reason="What should this test?")
-def test_rect_from_lm(test_frame_details: Dict):
-    landmarks = test_frame_details["lm7pt"]
-    face_rect = rect_from_lm(landmarks)
+# @pytest.mark.skip(reason="What should this test?")
+def test_rect_from_lm(test_landmarks, test_face_square):
+    face_rect = rect_from_lm(test_landmarks)
 
-    assert face_rect == test_frame_details["face_rect"]
+    assert face_rect == test_face_square
 
 
-def test_rect_from_lm_7pt():
-    landmarks = [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-    ]
-    landmarks = np.asarray(landmarks).reshape(-1, 2)
+def test_lm_angle(test_landmarks):
+    landmarks = np.asarray(test_landmarks).reshape(-1, 2)
     angle = lm_angle(landmarks)
 
     assert angle == 0
 
 
-def test_lm_angle_lm5pt():
-    landmarks = [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-    ]
-    landmarks = np.asarray(landmarks).reshape(-1, 2)
-    angle = lm_angle(landmarks)
-
-    assert angle == 0
-
-
-def test_em_angle():
-    landmarks = [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-    ]
-    landmarks = np.asarray(landmarks).reshape(-1, 2)
+def test_em_angle(test_landmarks):
+    landmarks = np.asarray(test_landmarks).reshape(-1, 2)
     angle = em_angle(landmarks)
 
     assert angle == 0
@@ -107,7 +55,7 @@ def test_scaling_transform_list(size_param=[256, 256]):
 # Invalid input sizes & types
 def test_scaling_transform_int_fail():
     with pytest.raises(ValueError):
-        ScalingTransform("some_string")  # type: ignore
+        ScalingTransform("some_string")
 
 
 def test_scaling_transform_tuple_fail():
