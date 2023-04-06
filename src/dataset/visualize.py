@@ -1,21 +1,13 @@
-import os
-import sys
-from functools import reduce
-
+from typing import Dict
 import cv2
 
-# Add parent directory to path for easy import
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 
-from src.dataset.read_metadata import read_metadata
-
-
-def get_frame_numbers(metadata):
+def get_frame_numbers(metadata: Dict):
     """The keys in json files are frame numbers in str."""
     return metadata.keys()
 
 
-def get_frame_details(metadata, frame_number):
+def get_frame_details(metadata: Dict, frame_number: int):
     """Return details about a specific frame."""
     return metadata[str(frame_number)]
 
@@ -44,36 +36,4 @@ def show_frame(frame):
     """Show the frame then wait for user to close it."""
     cv2.imshow("frame", frame)
     cv2.waitKey(0)
-
-    # closing all open windows
     cv2.destroyAllWindows()
-
-
-# visualize face rectangles and landmark points from the meta
-def main():
-    frame_src = "tests/sample/frames/frame1.jpg"
-    meta_src = "tests/sample/test.json"
-
-    # print(f"Visualizing rectangles of {video_src} from {meta_src}")
-
-    metadata = read_metadata(meta_src).send(None)
-
-    # get frame numbers
-    frame_numbers = get_frame_numbers(metadata)
-    # print(f"Number of frames in the video: {len(frame_numbers)}")
-
-    # get frame details
-    frame_details = get_frame_details(metadata, 1)
-    # print(frame_details)
-
-    # get a sample frame
-    frame = cv2.imread(frame_src)
-
-    # show_frame(draw_face_rectangle(frame, frame_details.get("face_rect")))
-    # show_frame(draw_landmark_points(frame, frame_details.get("lm7pt")))
-    landmarks_7pt = draw_landmark_points(frame, frame_details.get("lm7pt"))
-    show_frame(landmarks_7pt)
-
-
-if __name__ == "__main__":
-    main()
