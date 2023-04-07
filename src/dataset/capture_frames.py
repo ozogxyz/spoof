@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 from functools import partial
@@ -16,14 +17,8 @@ from utils import apply_map, filter_files_by_ext, get_video_params
 # Function to extract frames
 def capture_frames(src: str, dest: str) -> None:
     """
-    Captures video frames from root src and extracts them to dest folder.
-
-    Args:
-        src (str): path to video file
-        dest (str): path to destination folder
-
+    Extracts frames from a video and saves them to a directory.
     """
-    print(f"Capturing frames from {src} to {dest}")
     cap = cv2.VideoCapture(src)
     if cap.isOpened():
         cur_frame = 0
@@ -41,20 +36,40 @@ def capture_frames(src: str, dest: str) -> None:
     cv2.destroyAllWindows()
 
 
-# This part is for debugging purposes
-@hydra.main(version_base="1.2", config_path="../../", config_name="config")
-def main(cfg: DictConfig):
-    # quick check for casia
-    casia_src, casia_dest, casia_ext = get_video_params(cfg)
+# Function to extract frames from videos
+def extract_frames(src: str, dest: str, ext: str) -> None:
+    """
+    Extracts frames from all videos in src and saves them to dest
+    with the following structure:
 
-    # get all videos in the dataset
-    all_videos = filter_files_by_ext(casia_src, casia_ext)
+    dest/client_name/video_name/frame{frame number}.jpg
 
-    # create partial function with extract location for casia
-    casia_capturer = partial(capture_frames, dest=casia_dest)
 
-    # apply capturer to all videos
-    apply_map(casia_capturer, all_videos)
+    Args:
+        src (str): path to video files
+        dest (str): path to destination folder
+        ext (str): video file extension
+
+    """
+    # Get list of video files
+    video_files = filter_files_by_ext(src, ext)
+    # Extract frames
+    for video_file in video_files:
+        input_filename = Path(video_file).stem
+        output_directory = (
+            Path(dest) / Path(video_file).parent.stem / input_filename
+        )
+
+        # Create output directory if it doesn't exist
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+
+        capture_frames(video_file, str(output_directory))
+
+
+@hydra.main(version_base="1.2", config_path="../..", config_name="config")
+def main(cfg: DictConfig) -> None:
+    extract_frames(cfg.dataset.src, cfg.dataset.dest, cfg.dataset.ext)
 
 
 if __name__ == "__main__":
