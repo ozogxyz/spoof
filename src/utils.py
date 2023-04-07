@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -28,3 +29,9 @@ def filter_files_by_ext(path: str, ext: str):
 
 def apply_map(func: Callable, iterable: Iterable):
     return list(map(func, iterable))
+
+
+def read_metadata(src):
+    print(f"Extracting metadata from {src}")
+    with open(src) as f:
+        yield json.load(f)

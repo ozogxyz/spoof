@@ -1,33 +1,27 @@
 import cv2
+import pytest
 from src.dataset.visualize import (
     draw_face_rectangle,
     draw_landmark_points,
+    show_frame,
 )
 
 
-# def test_draw_rectangles():
-#     """Test draw_face_rectangle."""
-#     frame = cv2.imread("sample/frames/frame1.jpg")
-#     meta_src = "tests/sample/test.json"
-#     face_rect = [0, 0, 100, 100]
-#     image = draw_face_rectangle(frame, face_rect)
+def test_draw_rectangles(test_frame, test_sample):
+    """Test draw_face_rectangle."""
+    face_rect = test_sample.get("face_rect")
+    image = draw_face_rectangle(test_frame, face_rect)
 
-#     cv2.imshow("image", image)
-#     cv2.waitKey(0)
-#     cv2.destroyAllWindows()
+    show_frame(image)
 
-#     assert image.shape == (1280, 720, 3)
+    assert image.shape == (1280, 720, 3)
 
 
-def test_draw_landmark():
+def test_draw_landmark(test_frame, test_sample):
     """Test draw_landmark_points."""
-    frame = cv2.imread("sample/frames/frame1.jpg")
-    meta_src = "tests/sample/test.json"
-    landmark_points = [[0, 0], [100, 100]]
-    image = draw_landmark_points(frame, landmark_points)
+    landmark_points = test_sample.get("lm7pt")
+    image = draw_landmark_points(test_frame, landmark_points)
 
-    cv2.imshow("image", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    show_frame(image)
 
     assert image.shape == (1280, 720, 3)
