@@ -8,23 +8,59 @@ import numpy as np
 
 # TODO:
 """ 
-    1. Use MetaAddLMRect to make rect -> square and add to metadata 
+    1. Use rect_to_lm to make square form face rect 
     2. Use RCXT to frontalize face using landmarks
     3. Use RCXT to crop face to 224 x 224
     4. Update metadata with new landmarks
 """
 
+"""
+All the ROI transformation classes expects input in format of sample dict with specific keys.
+Output is also in sample dictionary format.
+
+sample dictionary description:
+{
+    "image": 3-channel BGR image, np.ndarray of shape [H, W, 3],
+    "meta": {
+        
+        "face_rect": list or np.ndarray for face rectangle
+            in format [xx, yy, ww, hh]. (xx, yy) - coordinate of left top angle of rectangle, ww and hh - its width and height
+        
+        "face_landmark": np.narray of shape [7, 2] or [5, 2] with  key point coodrinates in [X, Y] format.
+            - point order for 7-point version:
+                 [
+                    left corner of left eye,
+                    right corner of left eye,
+                    left corner of right eye,
+                    right corner of right eye,
+                    nose point,
+                    mouth left corner point,
+                    mouth right corner point
+                 ]
+            - point order for 5-point version:
+                 [
+                    left eye center,
+                    right eye center,
+                    nose point,
+                    mouth left corner point,
+                    mouth right corner point
+                 ]
+    }
+}
+"""
+
+
 # get face rectangle from landmarks
 def rect_from_lm(landmarks: List[int], scale: int = 1) -> List[int]:
     """
-    Get face rectangle from landmarks.
+    Get face rectangle [square] from landmarks.
 
     Args:
         landmarks (List[int]): list of 7 point landmarks
         scale (int): scale factor
 
     Returns:
-        List[int]: face rectangle
+        List[int]: face rectangle [square]
     """
 
     lms = np.array(landmarks).ravel()
@@ -39,6 +75,8 @@ def rect_from_lm(landmarks: List[int], scale: int = 1) -> List[int]:
     eyes_to_mouth = np.linalg.norm((eye1 + eye2) / 2 - mouth)
     fw = eye_dist * 2
     fh = eyes_to_mouth * 1.7
+
+    # Force the face rectangle to a square
     fsize = int(max(fw * scale, fh * scale))
     face_rect = [
         max(0, face_center[0] - fsize // 2),
@@ -119,102 +157,9 @@ def _get_size_value(size_param):
         raise ValueError(f"'size' parameter not understood: {size_param}")
 
 
-"""
-All the ROI transformation classes expects input in format of sample dict with specific keys.
-Output is also in sample dictionary format.
-
-sample dictionary description:
-{
-    "image": 3-channel BGR image, np.ndarray of shape [H, W, 3],
-    "meta": {
-        
-        "face_rect": list or np.ndarray for face rectangle
-            in format [xx, yy, ww, hh]. (xx, yy) - coordinate of left top angle of rectangle, ww and hh - its width and height
-        
-        "face_landmark": np.narray of shape [7, 2] or [5, 2] with  key point coodrinates in [X, Y] format.
-            - point order for 7-point version:
-                 [
-                    left corner of left eye,
-                    right corner of left eye,
-                    left corner of right eye,
-                    right corner of right eye,
-                    nose point,
-                    mouth left corner point,
-                    mouth right corner point
-                 ]
-            - point order for 5-point version:
-                 [
-                    left eye center,
-                    right eye center,
-                    nose point,
-                    mouth left corner point,
-                    mouth right corner point
-                 ]
-    }
-}
-"""
-
-## ROI EXTRACTION / TRANSFORMATION classes
 class ScalingTransform:
     def __init__(self, size: Tuple[int, int] | None = None):
         self.size = _get_size_value(size)
-
-
-class MetaAddLMRect:
-    """replace the face rectangle with"""
-
-    def __init__(self, scale_f: Tuple[int, int] = (1, 1)):
-        self.scale_f = scale_f
-
-    def __call__(self, sample: Dict) -> Dict:
-        meta = deepcopy(sample["meta"])
-        lm_array = meta["face_landmark"]
-        lm_type = meta.get("face_landmark_type", "LM7")
-        if lm_type == "LM7":
-            lm_rect = rect_from_lm(lm_array)
-            meta["face_rect"] = np.array(lm_rect)
-        else:
-            warnings.warn(f"Landmark type not supported: {lm_type}")
-
-        sample["meta"] = meta
-        return sample
-
-
-class MetaRandomNoise:
-    """For training augmentation: add noise to face keypoint(landmark) positions"""
-
-    def __init__(self, p=0.5, max_shift: Tuple[float, float] = (0.0, 0.0)):
-        self.p = p
-        self.max_shift = max_shift
-
-    def __call__(self, sample: Dict) -> Dict:
-        if random.random() > self.p:
-            return sample
-
-        meta = deepcopy(sample["meta"])
-
-        lm_array = np.float32(meta["face_landmark"])
-        lm_size = np.std(lm_array, axis=0)
-        lm_shift_size = lm_size * np.array(self.max_shift)
-        lm_noise_x = np.array(
-            [
-                np.float32((2 * random.random() - 1) * lm_shift_size[0])
-                for _ in lm_array
-            ]
-        )
-        lm_array[:, 0] += lm_noise_x
-
-        lm_noise_y = np.array(
-            [
-                np.float32((2 * random.random() - 1) * lm_shift_size[1])
-                for _ in lm_array
-            ]
-        )
-        lm_array[:, 1] += lm_noise_y
-
-        meta["face_landmark"] = lm_array
-        sample["meta"] = meta
-        return sample
 
 
 class FaceRegionXT(ScalingTransform):
@@ -225,9 +170,9 @@ class FaceRegionXT(ScalingTransform):
 
     def __init__(
         self,
-        size: Tuple[int, int] = None,
+        size: Tuple[int, int] | None = None,
         scale_rect_hw: Tuple[int, int] = (1, 1),
-        crop: Tuple[int, int] = None,
+        crop: Tuple[int, int] | None = None,
         interpolation=cv2.INTER_LINEAR,
         p=0.0,
         scale_delta=0.0,
@@ -297,7 +242,6 @@ class FaceRegionXT(ScalingTransform):
 
     def update_meta(self, meta: Dict, affine_mat: np.ndarray) -> Dict:
         new_meta = {k: v for k, v in meta.items()}
-
         lm_array = meta["face_landmark"]
         lm_dst = lm_array @ affine_mat[:2, :2].T + affine_mat[:2, -1:].T
         new_meta["face_landmark"] = lm_dst
@@ -342,7 +286,8 @@ class FaceRegionRCXT(FaceRegionXT):
     ) -> Tuple[np.ndarray, Tuple[int, int]]:
         rect = meta["face_rect"]
         lm_array = meta["face_landmark"]
-        angle = (em_angle(lm_array) - 90) / 180 * np.pi
+        # angle = (em_angle(lm_array) - 90) / 180 * np.pi
+        angle = (lm_angle(lm_array)) / 180 * np.pi
 
         rx, ry, rw, rh = rect
         rcx = rx + rw / 2
