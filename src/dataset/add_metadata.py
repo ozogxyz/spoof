@@ -22,14 +22,15 @@ def ensure_nparray_face_rect(meta: Dict, key: str = "face_rect") -> Dict:
 
 
 def rename_keys(meta: Dict, new_key: str, old_key: str) -> Dict:
-    meta = deepcopy(meta)
-    meta[new_key] = meta.pop(old_key)
+    if old_key in meta.keys():
+        meta = deepcopy(meta)
+        meta[new_key] = meta.pop(old_key)
 
     return meta
 
 
 def add_metadata(meta: Dict, frame) -> Dict:
-    """Add metadata in our format to a frame np array
+    """Add metadata in our format to a frame np array.
     For now only adheres to CASIA format, ideally should convert
     any metadata to our format.
     Args:
@@ -39,7 +40,11 @@ def add_metadata(meta: Dict, frame) -> Dict:
     Returns:
         sample: new dict of metadata in our format
     """
-    meta = rename_keys(meta, "face_landmark", "lm7pt")
+    meta = (
+        rename_keys(meta, "face_landmark", "lm7pt")
+        if "face_landmark" not in meta.keys()
+        else meta
+    )
     meta = ensure_nparray_face_rect(meta)
     meta = ensure_nparray_lm7(meta)
 
