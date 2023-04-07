@@ -1,109 +1,27 @@
+import json
+from typing import Any
+
 import cv2
+from numpy import dtype, generic, ndarray
 import pytest
 
 
 # sample image (frame) for testing
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module")
 def test_frame():
-    return cv2.imread("tests/sample/frames/frame1.jpg")
-
-
-# casia formatted metadata for testing
-@pytest.fixture(scope="module", autouse=True)
-def test_json():
-    return "tests/sample/test.json"
+    """Test frame (image)."""
+    return cv2.imread("tests/sample/test.jpg")
 
 
 # sample frame details for testing
-@pytest.fixture(scope="module", autouse=True)
-def test_sample():
-    return {
-        "face_rect": [73, 238, 568, 986],
-        "lm7pt": [
-            148,
-            616,
-            264,
-            626,
-            450,
-            630,
-            564,
-            616,
-            357,
-            806,
-            232,
-            968,
-            465,
-            976,
-        ],
-        "annot": {
-            "occlusion": "TG",
-            "eye_open_left": 0.9997702836990356,
-            "eye_open_right": 0.9998661875724792,
-        },
-        "feedback": 0,
-        "review_status": 1,
-    }
+@pytest.fixture(scope="module")
+def test_meta():
+    """"""
+    return json.load(open("tests/sample/test.json"))
 
 
-@pytest.fixture(scope="module", autouse=True)
-def test_sample_ours():
+@pytest.fixture(scope="module")
+def test_sample(test_frame: ndarray[int, dtype[generic]], test_meta: Any):
     """Our format for metadata"""
-    return {
-        "image": None,
-        "meta": {
-            "face_rect": [73, 238, 568, 986],
-            "face_landmark": [
-                148,
-                616,
-                264,
-                626,
-                450,
-                630,
-                564,
-                616,
-                357,
-                806,
-                232,
-                968,
-                465,
-                976,
-            ],
-            "annot": {
-                "occlusion": "TG",
-                "eye_open_left": 0.9997702836990356,
-                "eye_open_right": 0.9998661875724792,
-            },
-            "feedback": 0,
-            "review_status": 1,
-        },
-    }
-
-
-@pytest.fixture(scope="module", autouse=True)
-def test_face_rect():
-    return [73, 238, 568, 986]
-
-
-@pytest.fixture(scope="module", autouse=True)
-def test_face_square():
-    return [51, 496, 602, 602]
-
-
-@pytest.fixture(scope="module", autouse=True)
-def test_landmarks():
-    return [
-        148,
-        616,
-        264,
-        626,
-        450,
-        630,
-        564,
-        616,
-        357,
-        806,
-        232,
-        968,
-        465,
-        976,
-    ]
+    test_meta["face_landmark"] = test_meta.pop("lm7pt")
+    return {"image": test_frame, "meta": test_meta}
