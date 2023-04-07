@@ -1,6 +1,8 @@
 dataset:
   name: casia
-  src:  ${oc.env:HOME}/mipt/thesis/datasets/casia/
-  dest:  ${oc.env:USER}/mipt/thesis/code/spoof/tmp/
+  train_src: ${oc.env:HOME}/mipt/thesis/datasets/casia/train/data/train
+  test_src: ${oc.env:HOME}/mipt/thesis/datasets/casia/test/data/test
+  train_dest: ${oc.env:HOME}/tmp/train
+  test_dest: ${oc.env:HOME}/tmp/test
   ext: .avi
   meta: .json
