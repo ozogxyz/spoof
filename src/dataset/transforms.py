@@ -1,59 +1,15 @@
-from copy import deepcopy
 import random
-from typing import Dict, List, Tuple
 import warnings
+from copy import deepcopy
+from typing import Dict, List, Tuple
 
 import cv2
 import numpy as np
 
-# TODO:
-""" 
-    1. Use rect_to_lm to make square form face rect 
-    2. Use RCXT to frontalize face using landmarks
-    3. Use RCXT to crop face to 224 x 224
-    4. Update metadata with new landmarks
-"""
-
-"""
-All the ROI transformation classes expects input in format of sample dict with specific keys.
-Output is also in sample dictionary format.
-
-sample dictionary description:
-{
-    "image": 3-channel BGR image, np.ndarray of shape [H, W, 3],
-    "meta": {
-        
-        "face_rect": list or np.ndarray for face rectangle
-            in format [xx, yy, ww, hh]. (xx, yy) - coordinate of left top angle of rectangle, ww and hh - its width and height
-        
-        "face_landmark": np.narray of shape [7, 2] or [5, 2] with  key point coodrinates in [X, Y] format.
-            - point order for 7-point version:
-                 [
-                    left corner of left eye,
-                    right corner of left eye,
-                    left corner of right eye,
-                    right corner of right eye,
-                    nose point,
-                    mouth left corner point,
-                    mouth right corner point
-                 ]
-            - point order for 5-point version:
-                 [
-                    left eye center,
-                    right eye center,
-                    nose point,
-                    mouth left corner point,
-                    mouth right corner point
-                 ]
-    }
-}
-"""
-
 
 # get face rectangle from landmarks
 def rect_from_lm(landmarks: List[int], scale: int = 1) -> List[int]:
-    """
-    Get face rectangle [square] from landmarks.
+    """Get face rectangle [square] from landmarks.
 
     Args:
         landmarks (List[int]): list of 7 point landmarks
@@ -93,7 +49,7 @@ def lm_angle(lms: np.ndarray) -> float:
     Args:
 
         lms (np.ndarray): array of shape [7, 2] or [5, 2] with
-                          key point coodrinates in [X, Y] format.
+                          key point coordinates in [X, Y] format.
     """
     if lms.shape[0] == 7:
         eye_l = lms[:2].mean(axis=0)
@@ -163,8 +119,8 @@ class ScalingTransform:
 
 
 class FaceRegionXT(ScalingTransform):
-    """
-    Extract face rectangle area with rectangle scaled N(float) times.
+    """Extract face rectangle area with rectangle scaled N(float) times.
+
     Can either resize face rectangle area or crop it if 'crop' parameter is not None
     """
 
@@ -279,7 +235,8 @@ class FaceRegionXT(ScalingTransform):
 
 
 class FaceRegionRCXT(FaceRegionXT):
-    """Cropping face area with rotation compensation based on nose line (line from center of eye positions to center of mouth edges)."""
+    """Cropping face area with rotation compensation based on nose line (line from center of eye
+    positions to center of mouth edges)."""
 
     def get_affine_transform(
         self, meta: Dict
