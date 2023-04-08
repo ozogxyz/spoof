@@ -8,6 +8,17 @@ class CreateSample:
     def __call__(self, sample: Dict) -> Dict:
         return self.create_sample(sample["meta"], sample["image"])
 
+    def _validate_face_rect(self, meta: Dict, key: str) -> Dict:
+        """Validate if face_rect is in correct format."""
+        face_rect = meta.get(key)
+        assert face_rect is not None, "Face rect not found in meta"
+        if isinstance(face_rect, list):
+            face_rect = np.array(face_rect).ravel()
+        assert face_rect.shape == (4,), "Face rect shape is wrong"
+        meta[key] = face_rect
+
+        return meta
+
     def _validate_landmarks(self, meta: Dict, key: str) -> Dict:
         """Validate if landmark is in correct format."""
         face_landmarks = meta.get(key)
@@ -44,6 +55,7 @@ class CreateSample:
             sample: a dict with keys "image" and "meta"
         """
         meta = self._rename_keys(meta, "face_landmark", "lm7pt")
+        meta = self._validate_face_rect(meta, "face_rect")
         meta = self._validate_landmarks(meta, "face_landmark")
 
         sample = {
