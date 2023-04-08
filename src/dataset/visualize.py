@@ -16,9 +16,8 @@ def get_frame_details(metadata: Dict, frame_number: int):
 def draw_face_rectangle(frame, face_rect):
     """Draw a rectangle around the face."""
     x, y, w, h = face_rect
-    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    return frame
+    # TODO what does cv2.rectangle return?
+    return cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
 
 def draw_landmark_points(frame, landmark_points):
