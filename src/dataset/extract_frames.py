@@ -15,10 +15,8 @@ def filter_files_by_ext(path: str, ext: str):
 def capture_frames(
     video_src: str, metadata_src: str, dest: str, label: str
 ) -> None:
-    """
-    Extracts frames from a video and saves them to a directory.
-    Simultaneously saves the corresponding metadata to a json file.
-    The filenames are determined as follows:
+    """Extracts frames from a video and saves them to a directory. Simultaneously saves the
+    corresponding metadata to a json file. The filenames are determined as follows:
 
     {video_filename}_frame_{cur_frame}_{label}.jpg
     {video_filename}_frame_{cur_frame}_{label}.json
@@ -28,7 +26,6 @@ def capture_frames(
         metadata_src: path to the metadata file
         dest: path to the directory where frames will be saved
         label: label of the video
-
     """
     # Open and start to read the video
     cap = cv2.VideoCapture(video_src)
@@ -57,9 +54,7 @@ def capture_frames(
 
             # Save the metadata (only face_rect and face_landmarks)
             frame_meta = video_metadata.get(str(cur_frame))
-            frame_meta = {
-                k: frame_meta[k] for k in list(frame_meta.keys())[:2]
-            }
+            frame_meta = {k: frame_meta[k] for k in list(frame_meta.keys())[:2]}
 
             with open(frame_name + ".json", "w") as f:
                 json.dump(frame_meta, f)
@@ -95,8 +90,7 @@ def create_labels_csv(
     frame_ext: str = ".jpg",
     metadata_ext: str = ".json",
 ) -> None:
-    """
-    Creates a csv file with the following structure:
+    """Creates a csv file with the following structure:
 
     Path to frame, path to its metadata, label
 
@@ -131,22 +125,22 @@ def extract_frames(
     video_ext: str = ".avi",
     metadata_ext: str = ".json",
 ) -> None:
-    """
-    Extracts frames and metadata from all videos in src and saves them to dest
-    with the following structure:
+    """Extracts frames and metadata from all videos in src and saves them to dest with the
+    following structure:
 
-    dest/client_name/live/video_name/frame{frame number}.jpg
-    dest/client_name/live/video_name/frame{frame number}.json
+    dest/client_name/live/video_name/video_name_frame_{frame number}.jpg
+    dest/client_name/live/video_name/video_name_frame_{frame number}.json
 
-    dest/client_name/spoof/video_name/frame{frame number}.jpg
-    dest/client_name/spoof/video_name/frame{frame number}.json
+    dest/client_name/spoof/video_name/video_name_frame_{frame number}.jpg
+    dest/client_name/spoof/video_name/video_name_frame_{frame number}.json
 
 
     Args:
         video_src (str): path to the directory containing the videos
         metadata_src (str): path to the directory containing the metadata
         dest (str): path to the directory where frames will be saved
-        ext (str): video file extension
+        video_ext (str): video file extension
+        metadata_ext (str): metadata file extension
     """
     # Get list of video files
     video_files = filter_files_by_ext(video_src, ext=video_ext)
