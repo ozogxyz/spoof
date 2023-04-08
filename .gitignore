@@ -2,8 +2,8 @@
 **/*.DS_Store
 .DS_Store
 **/outputs/
-.vscode/
-/tests/sample/
+**/.vscode/
+/tests/sample/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
