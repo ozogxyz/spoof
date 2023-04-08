@@ -2,8 +2,8 @@ import json
 from typing import Any
 
 import cv2
-from numpy import dtype, generic, ndarray
 import pytest
+from numpy import dtype, generic, ndarray
 
 
 # sample image (frame) for testing
@@ -22,6 +22,36 @@ def test_meta():
 
 @pytest.fixture(scope="module")
 def test_sample(test_frame: ndarray[int, dtype[generic]], test_meta: Any):
-    """Our format for metadata"""
+    """Our format for metadata."""
     test_meta["face_landmark"] = test_meta.pop("lm7pt")
     return {"image": test_frame, "meta": test_meta}
+
+
+@pytest.fixture(scope="module")
+def train_dest():
+    return "/Users/motorbreath/mipt/thesis/code/spoof/data/train/"
+
+
+@pytest.fixture(scope="module")
+def test_dest():
+    return "/Users/motorbreath/mipt/thesis/code/spoof/data/test/"
+
+
+@pytest.fixture(scope="module")
+def train_src():
+    return "/Users/motorbreath/mipt/thesis/datasets/casia/train/data/train"
+
+
+@pytest.fixture(scope="module")
+def test_src():
+    return "/Users/motorbreath/mipt/thesis/datasets/casia/test/data/test"
+
+
+@pytest.fixture(scope="module")
+def train_metadata_src():
+    return "/Users/motorbreath/mipt/thesis/datasets/casia/train/meta/train"
+
+
+@pytest.fixture(scope="module")
+def test_metadata_src():
+    return "/Users/motorbreath/mipt/thesis/datasets/casia/test/meta/test"

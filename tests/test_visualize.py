@@ -1,5 +1,7 @@
-import cv2
-import pytest
+from typing import Any, Dict
+
+from numpy import dtype, generic, ndarray
+
 from src.dataset.visualize import (
     draw_face_rectangle,
     draw_landmark_points,
@@ -7,21 +9,24 @@ from src.dataset.visualize import (
 )
 
 
-def test_draw_rectangles(test_frame, test_sample):
+def test_draw_rectangles(test_sample: Dict[Any, Any]):
     """Test draw_face_rectangle."""
-    face_rect = test_sample.get("face_rect")
-    image = draw_face_rectangle(test_frame, face_rect)
-
+    frame = test_sample.get("image")
+    face_rect = test_sample["meta"].get("face_rect")
+    image = draw_face_rectangle(frame, face_rect)
     show_frame(image)
 
     assert image.shape == (1280, 720, 3)
 
 
-def test_draw_landmark(test_frame, test_sample):
+def test_draw_landmark(
+    test_frame: ndarray[int, dtype[generic]], test_sample: Dict[Any, Any]
+):
     """Test draw_landmark_points."""
-    landmark_points = test_sample.get("lm7pt")
-    image = draw_landmark_points(test_frame, landmark_points)
-
+    frame = test_sample.get("image")
+    face_landmark = test_sample["meta"].get("face_landmark")
+    image = draw_landmark_points(frame, face_landmark)
     show_frame(image)
 
+    assert 1 == 2
     assert image.shape == (1280, 720, 3)

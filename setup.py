@@ -9,6 +9,7 @@ setup(
     author="Orkun Ozoglu",
     author_email="ozoglu.o@python.edu",
     packages=find_packages(where="src"),
+    package_dir={"": "src"},
     python_requires=">=3.10",
     install_requires=[
         "hydra-core==1.3.2",
@@ -18,6 +19,11 @@ setup(
         "torchvision==0.15.1",
     ],
     extras_require={
-        "dev": ["black==21.5b2", "pre-commit==2.13.0", "docformatter"],
+        "dev": [
+            "black==21.5b2",
+            "pre-commit==2.13.0",
+            "docformatter",
+            "pre-commit",
+        ],
     },
 )

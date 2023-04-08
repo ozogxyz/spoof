@@ -1,15 +1,18 @@
 from typing import Any
 
 import cv2
+import numpy as np
 import pytest
 
-from src.dataset.add_metadata import add_metadata
+from src.dataset.create_sample import CreateSample
 from src.dataset.transforms import (
     FaceRegionRCXT,
     FaceRegionXT,
     em_angle,
     lm_angle,
 )
+import src.dataset.transforms as transforms
+
 from src.dataset.visualize import (
     draw_face_rectangle,
     draw_landmark_points,
@@ -20,7 +23,7 @@ from src.dataset.visualize import (
 @pytest.fixture(scope="module", autouse=True)
 def face_region_xt():
     return FaceRegionXT(
-        size=(448, 726),
+        size=(726, 448),
         scale_rect_hw=(1, 1),
         crop=None,
         interpolation=cv2.INTER_LINEAR,
@@ -43,20 +46,21 @@ def face_region_rcxt():
     )
 
 
-@pytest.mark.skip(reason="visualize")
+# @pytest.mark.skip(reason="visualize")
 def test_face_region_xt(
     face_region_xt: FaceRegionXT,
     test_sample: dict[str, Any],
 ):
     meta = test_sample.get("meta")
     frame = test_sample.get("image")
-    sample = add_metadata(meta, frame)  # type: ignore
+    sampler = CreateSample()
+    sample = sampler.create_sample(meta, frame)
 
     new_sample = face_region_xt(sample)
     new_image, new_meta = new_sample["image"], new_sample["meta"]
 
     show_frame(new_image, "face_region_xt")
-    # assert new_image.shape[:2] == face_region_xt.size
+    assert new_image.shape[:2] == face_region_xt.size
 
 
 # @pytest.mark.skip(reason="visualize")
@@ -65,7 +69,8 @@ def test_frontalize(
 ):
     meta = test_sample.get("meta")
     frame = test_sample.get("image")
-    sample = add_metadata(meta, frame)  # type: ignore
+    sampler = CreateSample()
+    sample = sampler.create_sample(meta, frame)
 
     transformed_sample = face_region_rcxt(sample)
 
@@ -84,3 +89,36 @@ def test_frontalize(
     print(lm_angle(new_meta["face_landmark"]))
     print(em_angle(new_meta["face_landmark"]))
     assert new_image.shape[:2] == face_region_rcxt.size
+
+
+def test_transforms(test_sample: dict[str, Any]):
+    lms = np.array(test_sample["meta"]["face_landmark"]).reshape(7, 2)
+    test_sample["meta"]["face_landmark"] = lms
+    frontalize = transforms.FaceRegionRCXT(size=(448, 448))
+
+    # test frontalize
+    eps_lm = 1e-6
+    eps_em = 5
+    frontalized = frontalize(test_sample)
+    assert frontalized["image"].shape[:2] == frontalize.size
+    assert frontalized["meta"]["face_landmark"].shape == (7, 2)
+    assert lm_angle(frontalized["meta"]["face_landmark"]) < eps_lm
+    assert em_angle(frontalized["meta"]["face_landmark"]) - 90 < eps_em
+
+
+def test_transforms_with_sampler(test_sample: dict[str, Any]):
+    test_meta = test_sample["meta"]
+    test_frame = test_sample["image"]
+    frontalize = transforms.FaceRegionRCXT(size=(448, 448))
+
+    sampler = CreateSample()
+    sample = sampler.create_sample(test_meta, test_frame)
+
+    # test frontalize
+    eps_lm = 1e-6
+    eps_em = 5
+    frontalized = frontalize(sample)
+    assert frontalized["image"].shape[:2] == frontalize.size
+    assert frontalized["meta"]["face_landmark"].shape == (7, 2)
+    assert lm_angle(frontalized["meta"]["face_landmark"]) < eps_lm
+    assert em_angle(frontalized["meta"]["face_landmark"]) - 90 < eps_em
