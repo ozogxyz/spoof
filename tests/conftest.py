@@ -22,7 +22,7 @@ def test_meta():
 
 @pytest.fixture(scope="module")
 def test_sample(test_frame: ndarray[int, dtype[generic]], test_meta: Any):
-    """Our format for metadata"""
+    """Our format for metadata."""
     test_meta["face_landmark"] = test_meta.pop("lm7pt")
     return {"image": test_frame, "meta": test_meta}
 
