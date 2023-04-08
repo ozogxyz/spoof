@@ -27,7 +27,7 @@ class CASIA(Dataset):
         with open(annotations_file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=",")
             next(csv_reader, None)
-            annotations = list()
+            annotations = []
             for row in csv_reader:
                 annotations.append(row)
 
