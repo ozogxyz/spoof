@@ -1,27 +1,26 @@
 import os
 
-import pytest
 
-from src.dataset.extract_frames import extract_frames, create_labels_csv
-
-
-# @pytest.skip(reason="Too long to run")
-# def test_extract_frames():
-#     train_src = (
-#         "/Users/motorbreath/mipt/thesis/datasets/casia/train/data/train"
-#     )
-#     dest = "tests/sample/frames"
-#     ext = ".avi"
-
-#     extract_frames(src=train_src, dest=dest, ext=ext)
-
-#     assert os.path.exists(dest)
-#     assert os.path.exists(os.path.join(dest, "labels.csv"))
+from src.dataset.extract_frames import create_labels_csv, extract_frames
 
 
-def test_create_labels_csv():
-    frame_src = "/Users/motorbreath/mipt/thesis/code/spoof/tests/sample/frames"
-    dest = "tests/sample/"
+def test_extract_frames_for_train(train_src, train_metadata_src, train_dest):
+    extract_frames(train_src, train_metadata_src, dest=train_dest)
 
-    create_labels_csv(frame_src, dest=dest)
-    assert os.path.exists(os.path.join(dest, "labels.csv"))
+    assert os.path.exists(train_dest)
+    assert os.path.exists(os.path.join(train_dest, "labels.csv"))
+
+    with open(os.path.join(train_dest, "labels.csv")) as f:
+        lines = f.readlines()
+        assert len(lines) == 1000
+
+
+def test_extract_frames_for_test(test_src, test_metadata_src, test_dest):
+    extract_frames(test_src, test_metadata_src, dest=test_dest)
+
+    assert os.path.exists(test_dest)
+    assert os.path.exists(os.path.join(test_dest, "labels.csv"))
+
+    with open(os.path.join(test_dest, "labels.csv")) as f:
+        lines = f.readlines()
+        assert len(lines) == 1000
