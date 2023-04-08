@@ -23,7 +23,7 @@ from src.dataset.visualize import (
 @pytest.fixture(scope="module", autouse=True)
 def face_region_xt():
     return FaceRegionXT(
-        size=(448, 726),
+        size=(726, 448),
         scale_rect_hw=(1, 1),
         crop=None,
         interpolation=cv2.INTER_LINEAR,
@@ -46,29 +46,31 @@ def face_region_rcxt():
     )
 
 
-@pytest.mark.skip(reason="visualize")
+# @pytest.mark.skip(reason="visualize")
 def test_face_region_xt(
     face_region_xt: FaceRegionXT,
     test_sample: dict[str, Any],
 ):
     meta = test_sample.get("meta")
     frame = test_sample.get("image")
-    sample = add_metadata(meta, frame)  # type: ignore
+    sampler = CreateSample()
+    sample = sampler.create_sample(meta, frame)
 
     new_sample = face_region_xt(sample)
     new_image, new_meta = new_sample["image"], new_sample["meta"]
 
     show_frame(new_image, "face_region_xt")
-    # assert new_image.shape[:2] == face_region_xt.size
+    assert new_image.shape[:2] == face_region_xt.size
 
 
-@pytest.mark.skip(reason="visualize")
+# @pytest.mark.skip(reason="visualize")
 def test_frontalize(
     face_region_rcxt: FaceRegionRCXT, test_sample: dict[str, Any]
 ):
     meta = test_sample.get("meta")
     frame = test_sample.get("image")
-    sample = add_metadata(meta, frame)  # type: ignore
+    sampler = CreateSample()
+    sample = sampler.create_sample(meta, frame)
 
     transformed_sample = face_region_rcxt(sample)
 
@@ -105,14 +107,12 @@ def test_transforms(test_sample: dict[str, Any]):
 
 
 def test_transforms_with_sampler(test_sample: dict[str, Any]):
-    sampler = CreateSample()
-
     test_meta = test_sample["meta"]
     test_frame = test_sample["image"]
-
-    sample = sampler.create_sample(test_meta, test_frame)
-
     frontalize = transforms.FaceRegionRCXT(size=(448, 448))
+
+    sampler = CreateSample()
+    sample = sampler.create_sample(test_meta, test_frame)
 
     # test frontalize
     eps_lm = 1e-6
