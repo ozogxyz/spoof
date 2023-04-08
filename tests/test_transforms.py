@@ -1,15 +1,18 @@
 from typing import Any
 
 import cv2
+import numpy as np
 import pytest
 
-from src.dataset.add_metadata import add_metadata
+from src.dataset.create_sample import add_metadata
 from src.dataset.transforms import (
     FaceRegionRCXT,
     FaceRegionXT,
     em_angle,
     lm_angle,
 )
+import src.dataset.transforms as transforms
+
 from src.dataset.visualize import (
     draw_face_rectangle,
     draw_landmark_points,
@@ -59,7 +62,7 @@ def test_face_region_xt(
     # assert new_image.shape[:2] == face_region_xt.size
 
 
-# @pytest.mark.skip(reason="visualize")
+@pytest.mark.skip(reason="visualize")
 def test_frontalize(
     face_region_rcxt: FaceRegionRCXT, test_sample: dict[str, Any]
 ):
@@ -84,3 +87,18 @@ def test_frontalize(
     print(lm_angle(new_meta["face_landmark"]))
     print(em_angle(new_meta["face_landmark"]))
     assert new_image.shape[:2] == face_region_rcxt.size
+
+
+def test_transforms(test_sample: dict[str, Any]):
+    lms = np.array(test_sample["meta"]["face_landmark"]).reshape(7, 2)
+    test_sample["meta"]["face_landmark"] = lms
+    frontalize = transforms.FaceRegionRCXT(size=(448, 448))
+
+    # test frontalize
+    eps_lm = 1e-6
+    eps_em = 5
+    frontalized = frontalize(test_sample)
+    assert frontalized["image"].shape[:2] == frontalize.size
+    assert frontalized["meta"]["face_landmark"].shape == (7, 2)
+    assert lm_angle(frontalized["meta"]["face_landmark"]) < eps_lm
+    assert em_angle(frontalized["meta"]["face_landmark"]) - 90 < eps_em
