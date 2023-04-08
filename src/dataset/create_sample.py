@@ -45,6 +45,7 @@ class CreateSample:
 
     def create_sample(self, meta: Dict, frame) -> Dict:
         """Add metadata in our format to a frame np array.
+
         For now only adheres to CASIA format, ideally should convert
         any metadata to our format. In CASIA keys are face_rect
         and lm7pt.
