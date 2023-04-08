@@ -32,9 +32,16 @@ def capture_frames(
     """
     # Open and start to read the video
     cap = cv2.VideoCapture(video_src)
+    print("Started extracting frames from {}".format(video_src))
 
     # Load the corresponding metadata
-    video_metadata = json.loads(metadata_src)
+    print("Loading metadata from {}".format(metadata_src))
+    if os.path.exists(metadata_src):
+        video_metadata = json.loads(metadata_src)
+    else:
+        raise FileNotFoundError(
+            "Metadata file {} does not exist".format(metadata_src)
+        )
 
     if cap.isOpened():
         cur_frame = 1
@@ -118,7 +125,11 @@ def create_labels_csv(
 
 # Function to extract frames from videos
 def extract_frames(
-    video_src: str, metadata_src: str, dest: str, ext: str
+    video_src: str,
+    metadata_src: str,
+    dest: str,
+    video_ext: str = ".avi",
+    metadata_ext: str = ".json",
 ) -> None:
     """
     Extracts frames and metadata from all videos in src and saves them to dest
@@ -138,12 +149,20 @@ def extract_frames(
         ext (str): video file extension
     """
     # Get list of video files
-    video_files = filter_files_by_ext(video_src, ext)
+    video_files = filter_files_by_ext(video_src, ext=video_ext)
 
     # Extract frames
     for video_file in video_files:
         input_filename = Path(video_file).stem
+
+        # Get the client name
         client = Path(video_file).parent.stem
+
+        # Get the corresponding metadata filename
+        metadata_src = os.path.join(
+            metadata_src, client, input_filename + metadata_ext
+        )
+
         label = input_filename.split("_")[-1]
         if label == "1":
             # live video
@@ -159,4 +178,4 @@ def extract_frames(
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
 
-        capture_frames(video_src, metadata_src, str(output_directory), label)
+        capture_frames(video_file, metadata_src, str(output_directory), label)
