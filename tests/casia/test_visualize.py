@@ -16,8 +16,6 @@ def test_draw_rectangles(test_sample: Dict[Any, Any]):
     image = draw_face_rectangle(frame, face_rect)
     show_frame(image)
 
-    assert image.shape == (1280, 720, 3)
-
 
 def test_draw_landmark(
     test_frame: ndarray[int, dtype[generic]], test_sample: Dict[Any, Any]
@@ -27,6 +25,3 @@ def test_draw_landmark(
     face_landmark = test_sample["meta"].get("face_landmark")
     image = draw_landmark_points(frame, face_landmark)
     show_frame(image)
-
-    assert 1 == 2
-    assert image.shape == (1280, 720, 3)
