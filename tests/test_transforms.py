@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pytest
 
-from src.dataset.create_sample import add_metadata
+from src.dataset.create_sample import CreateSample
 from src.dataset.transforms import (
     FaceRegionRCXT,
     FaceRegionXT,
@@ -98,6 +98,26 @@ def test_transforms(test_sample: dict[str, Any]):
     eps_lm = 1e-6
     eps_em = 5
     frontalized = frontalize(test_sample)
+    assert frontalized["image"].shape[:2] == frontalize.size
+    assert frontalized["meta"]["face_landmark"].shape == (7, 2)
+    assert lm_angle(frontalized["meta"]["face_landmark"]) < eps_lm
+    assert em_angle(frontalized["meta"]["face_landmark"]) - 90 < eps_em
+
+
+def test_transforms_with_sampler(test_sample: dict[str, Any]):
+    sampler = CreateSample()
+
+    test_meta = test_sample["meta"]
+    test_frame = test_sample["image"]
+
+    sample = sampler.create_sample(test_meta, test_frame)
+
+    frontalize = transforms.FaceRegionRCXT(size=(448, 448))
+
+    # test frontalize
+    eps_lm = 1e-6
+    eps_em = 5
+    frontalized = frontalize(sample)
     assert frontalized["image"].shape[:2] == frontalize.size
     assert frontalized["meta"]["face_landmark"].shape == (7, 2)
     assert lm_angle(frontalized["meta"]["face_landmark"]) < eps_lm
