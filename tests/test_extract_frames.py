@@ -20,8 +20,8 @@ from src.dataset.extract_frames import extract_frames, create_labels_csv
 
 
 def test_create_labels_csv():
-    train_src = "/Users/motorbreath/mipt/thesis/code/spoof/tests/sample/frames"
+    frame_src = "/Users/motorbreath/mipt/thesis/code/spoof/tests/sample/frames"
     dest = "tests/sample/"
 
-    create_labels_csv(src=train_src, dest=dest, ext=".jpg")
+    create_labels_csv(frame_src, dest=dest)
     assert os.path.exists(os.path.join(dest, "labels.csv"))
