@@ -49,11 +49,6 @@ def get_output_dir(video_path, dest):
     return output_directory
 
 
-def filter_files_by_ext(path: str, ext: str):
-    for path in Path(path).rglob(f"*{ext}"):
-        yield str(path)
-
-
 def create_filename(save_dest: str, label, frame_number, ext):
     """Creates the filename for the frame with the following structure:
 
@@ -107,6 +102,11 @@ def capture_frames(video_path: str, save_dest: str) -> int:
     else:
         print("Cannot open video file")
         return 0
+
+
+def filter_files_by_ext(path: str, ext: str):
+    for path in Path(path).rglob(f"*{ext}"):
+        yield str(path)
 
 
 def extract_frames(
@@ -188,7 +188,7 @@ def extract_metadata(metadata_root: str, save_dest: str) -> int:
     return total_frame_count
 
 
-class CreateSampleDict:
+class Sampler:
     def __call__(self, sample: Dict) -> Dict:
         return self.create_sample(sample["meta"], sample["image"])
 
@@ -230,9 +230,7 @@ class CreateSampleDict:
     def create_sample(self, meta: Dict, frame) -> Dict:
         """Add metadata in our format to a frame np array.
 
-        For now only adheres to CASIA format, ideally should convert
-        any metadata to our format. In CASIA keys are face_rect
-        and lm7pt.
+        In CASIA necessary keys are face_rect and lm7pt.
         Args:
             meta: metadata of a frame obtained from data
             frame: np array of a frame
@@ -247,7 +245,7 @@ class CreateSampleDict:
             "image": frame,
             "meta": meta,
         }
-
+        print(sample)
         return sample
 
 
@@ -257,6 +255,7 @@ class CASIA(Dataset):
     Args:
         dataset_dir: path to the dataset directory
         annotations: path to the annotation file with relative path to a frame and its labels
+        meta_file: path to the annotated metadata file
         transform: transform to apply to the sample
     """
 
@@ -264,28 +263,55 @@ class CASIA(Dataset):
         self,
         dataset_dir: str,
         annotations_file: str,
+        meta_file: str,
         transform: Callable,
+        sampler: Sampler = Sampler(),
     ) -> None:
         self.dataset_dir = dataset_dir
         self.train_list = []
+        self.meta_list = []
         self.transform = transform
-        train_file_buf = open(annotations_file, "r")
+        self.sampler = sampler
+
+        # Read the annotations file
+        self.annotations_file = annotations_file
+        self._read_annotations_file()
+
+        # Read the metadata file
+        self.meta_file = meta_file
+        self.meta = self._read_meta_file()
+
+    def _read_annotations_file(self):
+        train_file_buf = open(self.annotations_file, "r")
         line = train_file_buf.readline().strip()
         while line:
-            image_path, label = line.split(",")
+            image_path, label = line.split(" ")
             self.train_list.append((image_path, int(label)))
             line = train_file_buf.readline().strip()
+
+    def _read_meta_file(self):
+        meta_file_buf = open(self.meta_file, "r")
+        line = meta_file_buf.readline().strip()
+        while line:
+            image_path, meta = line.split(" ")
+            self.meta_list.append((image_path, meta))
+            line = meta_file_buf.readline().strip()
 
     def __len__(self) -> int:
         return len(self.train_list)
 
     def __getitem__(self, index) -> Tuple[torch.Tensor, torch.Tensor]:
         image_path, label = self.train_list[index]
+        meta_path = self.meta_list[index][0]
         image_path = os.path.join(self.dataset_dir, image_path)
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = self.transform(image)
+        meta = json.load(open(meta_path, "r"))
+        sample = self.sampler({"meta": meta, "image": image})
+        sample = self.transform(sample)
+        image = sample["image"]
         image = image.transpose(2, 0, 1).astype(np.float32)
         image = torch.from_numpy(image)
+        label = torch.tensor(label)
 
         return image, label

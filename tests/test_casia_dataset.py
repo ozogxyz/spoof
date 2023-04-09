@@ -1,12 +1,17 @@
 import os
 from pathlib import Path
+import cv2
+import numpy as np
 
 import pytest
 
 from src.preprocessing.casia import extract_frames, extract_metadata, CASIA
+from src.preprocessing.transforms import FaceRegionRCXT
+from src.utils.annotations import create_annotations
+from src.utils.visualize import show_frame
 
 
-# @pytest.mark.skip(reason="Slow")
+@pytest.mark.skip(reason="Slow")
 def test_extract_train_frames():
     video_src = "data/casia/train/data/train"
     save_dest = "data/casia/train_frames"
@@ -22,7 +27,7 @@ def test_extract_train_frames():
     assert fr_n == count
 
 
-# @pytest.mark.skip(reason="Slow")
+@pytest.mark.skip(reason="Slow")
 def test_extract_test_frames():
     video_src = "data/casia/test"
     save_dest = "data/casia/test_frames"
@@ -38,6 +43,7 @@ def test_extract_test_frames():
     assert fr_n == count
 
 
+@pytest.mark.skip(reason="Slow")
 def test_extract_train_meta():
     meta_src = "data/casia/train/meta/train"
     save_dest = "data/casia/train_frames"
@@ -70,4 +76,17 @@ def test_extract_test_meta():
 
 
 def test_casia_dataset():
-    pass
+    # create_annotations("data/casia/train_frames", "train.txt")
+    transform = FaceRegionRCXT(size=(224, 224))
+    dataset = CASIA(
+        "data/casia/train_frames",
+        annotations_file="data/train.txt",
+        transform=transform,
+        meta_file="data/meta.txt",
+    )
+
+    # convert tensor to opencv image
+    image = dataset[1241][0].numpy().transpose(1, 2, 0)
+
+    show_frame(title="s", frame=image)
+    assert len(dataset) == 45141
