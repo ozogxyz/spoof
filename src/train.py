@@ -19,7 +19,7 @@ def main(cfg: DictConfig):
         cfg.data.train_meta,
         transform=FaceRegionRCXT(size=cfg.data.face_region.size),
     )
-    train_dl = DataLoader(train_ds, batch_size=cfg.data.batch_size, shuffle=True)
+    train_dl = DataLoader(train_ds, batch_size=cfg.data.batch_size, shuffle=False)
 
     # Load model
     model = CNN(**cfg.model)

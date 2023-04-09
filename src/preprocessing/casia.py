@@ -105,8 +105,8 @@ def capture_frames(video_path: str, save_dest: str) -> int:
 
 
 def filter_files_by_ext(path: str, ext: str):
-    for path in Path(path).rglob(f"*{ext}"):
-        yield str(path)
+    for p in Path(path).rglob(f"*{ext}"):
+        yield str(p)
 
 
 def extract_frames(
@@ -300,16 +300,19 @@ class CASIA(Dataset):
 
     def __getitem__(self, index) -> Tuple[torch.Tensor, torch.Tensor]:
         image_path, label = self.train_list[index]
-        meta_path = self.meta_list[index][0]
         image_path = os.path.join(self.dataset_dir, image_path)
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        meta_path = self.meta_list[index][0]
         meta = json.load(open(meta_path, "r"))
         sample = self.sampler({"meta": meta, "image": image})
         sample = self.transform(sample)
+
         image = sample["image"]
         image = image.transpose(2, 0, 1).astype(np.float32)
         image = torch.from_numpy(image)
+
         label = torch.tensor(label)
 
         return image, label
