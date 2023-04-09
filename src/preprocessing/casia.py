@@ -113,7 +113,7 @@ def extract_frames(
     video_src: str,
     save_dest: str,
     video_ext: str = ".avi",
-) -> None:
+) -> int:
     """Extracts frames and metadata from all videos in src and saves them to dest with the
     following structure:
 
@@ -123,6 +123,8 @@ def extract_frames(
         video_src (str): path to the directory containing the videos
         dest (str): path to the directory where frames will be saved
         video_ext (str): video file extension
+    Returns:
+        total_frame_count (int): total number of frames extracted
     """
     # Get list of video files
     video_files = filter_files_by_ext(video_src, ext=video_ext)
@@ -136,6 +138,8 @@ def extract_frames(
 
     print("Total frames extracted: {}".format(total_frame_count))
 
+    return total_frame_count
+
 
 def extract_meta_per_frame(meta_path, save_dest) -> int:
     meta_name = Path(meta_path).stem
@@ -147,7 +151,8 @@ def extract_meta_per_frame(meta_path, save_dest) -> int:
             # Only get the first 2 keys namely face_rect and lm7pts
             face_rect_lm7pt = dict(itertools.islice(meta.items(), 2))
             label = get_label(meta_path)
-            filename = create_filename(save_dest, label, cur_frame, ".json")
+            # frame 0 is pitch black
+            filename = create_filename(save_dest, label, cur_frame + 1, ".json")
             with open(filename, "w") as f:
                 json.dump(face_rect_lm7pt, f)
 
@@ -251,7 +256,7 @@ class CASIA(Dataset):
 
     Args:
         dataset_dir: path to the dataset directory
-        annotations: path to the csv file with labels
+        annotations: path to the annotation file with relative path to a frame and its labels
         transform: transform to apply to the sample
     """
 

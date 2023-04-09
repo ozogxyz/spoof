@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from src.preprocessing.casia import extract_frames, extract_metadata
+from src.preprocessing.casia import extract_frames, extract_metadata, CASIA
 
 
-@pytest.mark.skip(reason="This test takes a long time to run")
+# @pytest.mark.skip(reason="Slow")
 def test_extract_train_frames():
     video_src = "data/casia/train/data/train"
     save_dest = "data/casia/train_frames"
@@ -22,7 +22,7 @@ def test_extract_train_frames():
     assert fr_n == count
 
 
-@pytest.mark.skip(reason="This test takes a long time to run")
+# @pytest.mark.skip(reason="Slow")
 def test_extract_test_frames():
     video_src = "data/casia/test"
     save_dest = "data/casia/test_frames"
@@ -38,7 +38,6 @@ def test_extract_test_frames():
     assert fr_n == count
 
 
-# @pytest.mark.skip(reason="This test takes a long time to run")
 def test_extract_train_meta():
     meta_src = "data/casia/train/meta/train"
     save_dest = "data/casia/train_frames"
@@ -54,7 +53,7 @@ def test_extract_train_meta():
     assert mn == count
 
 
-@pytest.mark.skip(reason="This test takes a long time to run")
+@pytest.mark.skip(reason="Missing folders")
 def test_extract_test_meta():
     meta_src = "data/casia/test/meta/test"
     save_dest = "data/casia/test_frames"
@@ -68,3 +67,7 @@ def test_extract_test_meta():
     for path in Path(save_dest).rglob("*.json"):
         count += 1
     assert mn == count
+
+
+def test_casia_dataset():
+    pass
