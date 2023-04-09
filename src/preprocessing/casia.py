@@ -174,6 +174,8 @@ def extract_metadata(metadata_root: str, save_dest: str) -> int:
         total_frame_count += frame_count
         print("Total metadata extracted for frames: {}".format(frame_count))
 
+    return total_frame_count
+
 
 class CreateSampleDict:
     def __call__(self, sample: Dict) -> Dict:
