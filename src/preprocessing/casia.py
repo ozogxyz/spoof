@@ -1,4 +1,5 @@
 from copy import deepcopy
+import itertools
 import json
 import os
 from pathlib import Path
@@ -13,7 +14,11 @@ import csv
 
 # Helper functions
 def get_output_dir(video_path, dest):
-    """Returns the output directory for the video.
+    """Returns the output directory for the frames to be extracted from the video. If the video
+    filename ends with _1, then label is real, otherwise spoof. Output directory structure:
+
+    {dest}/{client}/real/{video_filename}
+    {dest}/{client}/spoof/{video_filename}
 
     Args:
         video_path (str): path to the video file
@@ -24,10 +29,11 @@ def get_output_dir(video_path, dest):
     input_filename = Path(video_path).stem
 
     # Get the client name
-    client = Path(video_path).parent.stem
-    label = input_filename.split("_")[-1]
+    # get the parent directory of the video
+    client = Path(video_path).parent.name
+    label = get_label(input_filename)
     if label == "1":
-        # live video
+        # real video
         output_directory = Path(dest) / client / "real" / input_filename
     elif label == "0":
         # spoof video
@@ -43,20 +49,13 @@ def get_output_dir(video_path, dest):
     return output_directory
 
 
-def filter_files_by_ext(path: str, ext: str):
-    for path in Path(path).rglob(f"*{ext}"):  # type: ignore
-        yield str(path)
+def create_filename(save_dest: str, label, frame_number, ext):
+    """Creates the filename for the frame with the following structure:
 
-
-def get_filename(metadata_file, label, frame_number):
-    filename = (
-        Path(metadata_file).stem
-        + "_frame_"
-        + str(frame_number)
-        + "_"
-        + label
-        + ".json"
-    )
+    {video_filename}_frame_{cur_frame}_{label}.jpg
+    """
+    filename = f"{save_dest}_frame_{frame_number}_{label}"
+    filename = Path(filename).with_suffix(ext)
 
     return filename
 
@@ -78,10 +77,10 @@ def capture_frames(video_path: str, save_dest: str) -> int:
     """
     # Open and start to read the video
     cap = cv2.VideoCapture(video_path)
-    print("Started extracting frames from {}".format(Path(video_path).stem))
-
+    video_name = Path(video_path).stem
+    save_dest = str(Path(save_dest) / video_name)
     if cap.isOpened():
-        cur_frame = 1
+        cur_frame = 0
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -89,10 +88,10 @@ def capture_frames(video_path: str, save_dest: str) -> int:
 
             # Save the frame
             label = get_label(video_path)
-            filename = get_filename(video_path, label, cur_frame)
-            cv2.imwrite(os.path.join(save_dest, filename), frame)
-
+            filename = create_filename(save_dest, label, cur_frame, ".jpg")
+            cv2.imwrite(filename=str(filename), img=frame)
             cur_frame += 1
+
         cap.release()
 
         print("Finished extracting frames: {}".format(Path(video_path).stem))
@@ -102,23 +101,30 @@ def capture_frames(video_path: str, save_dest: str) -> int:
 
     else:
         print("Cannot open video file")
-        return -1
+        return 0
+
+
+def filter_files_by_ext(path: str, ext: str):
+    for path in Path(path).rglob(f"*{ext}"):
+        yield str(path)
 
 
 def extract_frames(
     video_src: str,
     save_dest: str,
     video_ext: str = ".avi",
-) -> None:
+) -> int:
     """Extracts frames and metadata from all videos in src and saves them to dest with the
     following structure:
 
-    dest/client_name/live/video_name/video_name_frame_{frame number}.jpg
-    dest/client_name/spoof/video_name/video_name_frame_{frame number}.jpg
+    dest/client_name/live/video_name/video_name_frame_{frame number}_{label}.jpg
+    dest/client_name/spoof/video_name/video_name_frame_{frame number}_{label}.jpg
     Args:
         video_src (str): path to the directory containing the videos
         dest (str): path to the directory where frames will be saved
         video_ext (str): video file extension
+    Returns:
+        total_frame_count (int): total number of frames extracted
     """
     # Get list of video files
     video_files = filter_files_by_ext(video_src, ext=video_ext)
@@ -132,18 +138,23 @@ def extract_frames(
 
     print("Total frames extracted: {}".format(total_frame_count))
 
+    return total_frame_count
 
-def extract_meta_per_frame(meta_file, save_dest) -> int:
-    with open(meta_file, "r") as f:
-        cur_frame = 1
+
+def extract_meta_per_frame(meta_path, save_dest) -> int:
+    meta_name = Path(meta_path).stem
+    save_dest = str(Path(save_dest) / meta_name)
+    with open(meta_path, "r") as f:
+        cur_frame = 0
         metadata = json.load(f)
-        for frame in metadata:
-            label = get_label(meta_file)
-            filename = get_filename(meta_file, label, frame)
-
-            # Write metadata for the current frame to a json file
-            with open(os.path.join(save_dest, filename), "w") as f:
-                json.dump(metadata[frame], f)
+        for frame, meta in metadata.items():
+            # Only get the first 2 keys namely face_rect and lm7pts
+            face_rect_lm7pt = dict(itertools.islice(meta.items(), 2))
+            label = get_label(meta_path)
+            # frame 0 is pitch black
+            filename = create_filename(save_dest, label, cur_frame + 1, ".json")
+            with open(filename, "w") as f:
+                json.dump(face_rect_lm7pt, f)
 
             cur_frame += 1
         return cur_frame
@@ -167,15 +178,15 @@ def extract_metadata(metadata_root: str, save_dest: str) -> int:
     total_frame_count = 0
     for metadata_file in metadata_files:
         output_directory = get_output_dir(metadata_file, save_dest)
-        frame_count = extract_meta_per_frame(
-            metadata_file, str(output_directory)
-        )
+        frame_count = extract_meta_per_frame(metadata_file, str(output_directory))
         print("Extracting metadata from {}".format(Path(metadata_file)))
         total_frame_count += frame_count
         print("Total metadata extracted for frames: {}".format(frame_count))
 
+    return total_frame_count
 
-class CreateSampleDict:
+
+class Sampler:
     def __call__(self, sample: Dict) -> Dict:
         return self.create_sample(sample["meta"], sample["image"])
 
@@ -217,9 +228,7 @@ class CreateSampleDict:
     def create_sample(self, meta: Dict, frame) -> Dict:
         """Add metadata in our format to a frame np array.
 
-        For now only adheres to CASIA format, ideally should convert
-        any metadata to our format. In CASIA keys are face_rect
-        and lm7pt.
+        In CASIA necessary keys are face_rect and lm7pt.
         Args:
             meta: metadata of a frame obtained from data
             frame: np array of a frame
@@ -243,36 +252,64 @@ class CASIA(Dataset):
 
     Args:
         dataset_dir: path to the dataset directory
-        annotations: path to the csv file with labels
+        annotations: path to the annotation file with relative path to a frame and its labels
+        meta_file: path to the annotated metadata file
         transform: transform to apply to the sample
     """
 
     def __init__(
         self,
         dataset_dir: str,
-        annotations_file: str,
+        annotations: str,
+        meta_file: str,
         transform: Callable,
+        sampler: Sampler = Sampler(),
     ) -> None:
         self.dataset_dir = dataset_dir
         self.train_list = []
+        self.meta_list = []
         self.transform = transform
-        train_file_buf = open(annotations_file, "r")
+        self.sampler = sampler
+
+        # Read the annotations file
+        self.annotations = annotations
+        self._read_annotations_file()
+
+        # Read the metadata file
+        self.meta_file = meta_file
+        self.meta = self._read_meta_file()
+
+    def _read_annotations_file(self):
+        train_file_buf = open(self.annotations, "r")
         line = train_file_buf.readline().strip()
         while line:
-            image_path, label = line.split(",")
+            image_path, label = line.split(" ")
             self.train_list.append((image_path, int(label)))
             line = train_file_buf.readline().strip()
+
+    def _read_meta_file(self):
+        meta_file_buf = open(self.meta_file, "r")
+        line = meta_file_buf.readline().strip()
+        while line:
+            image_path, meta = line.split(" ")
+            self.meta_list.append((image_path, meta))
+            line = meta_file_buf.readline().strip()
 
     def __len__(self) -> int:
         return len(self.train_list)
 
     def __getitem__(self, index) -> Tuple[torch.Tensor, torch.Tensor]:
         image_path, label = self.train_list[index]
+        meta_path = self.meta_list[index][0]
         image_path = os.path.join(self.dataset_dir, image_path)
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = self.transform(image)
+        meta = json.load(open(meta_path, "r"))
+        sample = self.sampler({"meta": meta, "image": image})
+        sample = self.transform(sample)
+        image = sample["image"]
         image = image.transpose(2, 0, 1).astype(np.float32)
         image = torch.from_numpy(image)
+        label = torch.tensor(label)
 
         return image, label

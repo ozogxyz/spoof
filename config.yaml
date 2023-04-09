@@ -1,8 +1,17 @@
-dataset:
-  name: casia
-  train_src: ${oc.env:HOME}/mipt/thesis/datasets/casia/train/data/train
-  test_src: ${oc.env:HOME}/mipt/thesis/datasets/casia/test/data/test
-  train_dest: ${oc.env:HOME}/tmp/train
-  test_dest: ${oc.env:HOME}/tmp/test
+data:
+  train: ${oc.env:HOME}/mipt/thesis/datasets/casia/train/data/train
+  train_frames: ${oc.env:HOME}/mipt/thesis/code/spoof/data/train_frames
+  test: ${oc.env:HOME}/mipt/thesis/datasets/casia/test/data/test
+  test_frames: ${oc.env:HOME}/mipt/thesis/code/spoof/data/test_frames
+  annotations: ${oc.env:HOME}/mipt/thesis/code/spoof/data/train.txt
+  train_meta: ${oc.env:HOME}/mipt/thesis/code/spoof/data/train_meta.txt
   ext: .avi
   meta: .json
+  batch_size: 32
+  face_region:
+    size: 224
+model:
+  in_channels: 3
+  num_classes: 2
+train:
+  epochs: 10
