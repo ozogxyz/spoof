@@ -27,7 +27,7 @@ def main(cfg: DictConfig):
     # Train model
     for epoch in range(cfg.train.epochs):
         for batch in train_dl:
-            image, label = batch["image"], batch["label"]
+            image, label = batch
             print(image.shape, label.shape)
             break
 
