@@ -36,9 +36,7 @@ def create_meta(data_root, meta_file):
 
 
 if __name__ == "__main__":
-    data_root = (
-        "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/train_frames"
-    )
+    data_root = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/train_frames"
     train_file = "/Users/motorbreath/mipt/thesis/code/spoof/data/train.txt"
     meta_file = "/Users/motorbreath/mipt/thesis/code/spoof/data/meta.txt"
     create_annotations(data_root, train_file)

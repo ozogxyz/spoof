@@ -178,9 +178,7 @@ def extract_metadata(metadata_root: str, save_dest: str) -> int:
     total_frame_count = 0
     for metadata_file in metadata_files:
         output_directory = get_output_dir(metadata_file, save_dest)
-        frame_count = extract_meta_per_frame(
-            metadata_file, str(output_directory)
-        )
+        frame_count = extract_meta_per_frame(metadata_file, str(output_directory))
         print("Extracting metadata from {}".format(Path(metadata_file)))
         total_frame_count += frame_count
         print("Total metadata extracted for frames: {}".format(frame_count))

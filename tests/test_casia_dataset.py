@@ -87,6 +87,8 @@ def test_casia_dataset():
 
     # convert tensor to opencv image
     image = dataset[1241][0].numpy().transpose(1, 2, 0)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-    show_frame(title="s", frame=image)
+    show_frame(title="Sample input to CNN", frame=image)
     assert len(dataset) == 45141
+    assert image.shape == (224, 224, 3)
