@@ -4,7 +4,7 @@ import os
 def gen_train_file(data_root, train_file):
     """Generate the train file, which has the following format.
 
-    relative_path0 label0 relative_path1 label1 relative_path2 label2
+    relative_path0 label0 relative_path1 label1 relative_path2 label2 ...
     """
     train_file_buf = open(train_file, "w")
     id_list = os.listdir(data_root)
