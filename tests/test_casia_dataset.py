@@ -6,7 +6,7 @@ import pytest
 from src.preprocessing.casia import extract_frames, extract_metadata
 
 
-# @pytest.mark.skip(reason="This test takes a long time to run")
+@pytest.mark.skip(reason="This test takes a long time to run")
 def test_extract_train_frames():
     video_src = "data/casia/train/data/train"
     save_dest = "data/casia/train_frames"

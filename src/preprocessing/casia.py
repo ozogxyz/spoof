@@ -1,4 +1,5 @@
 from copy import deepcopy
+import itertools
 import json
 import os
 from pathlib import Path
@@ -60,7 +61,7 @@ def create_filename(save_dest: str, label, frame_number, ext):
     """
     filename = f"{save_dest}_frame_{frame_number}_{label}"
     filename = Path(filename).with_suffix(ext)
-    print(filename)
+
     return filename
 
 
@@ -84,7 +85,7 @@ def capture_frames(video_path: str, save_dest: str) -> int:
     video_name = Path(video_path).stem
     save_dest = str(Path(save_dest) / video_name)
     if cap.isOpened():
-        cur_frame = 1
+        cur_frame = 0
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -140,17 +141,15 @@ def extract_meta_per_frame(meta_path, save_dest) -> int:
     meta_name = Path(meta_path).stem
     save_dest = str(Path(save_dest) / meta_name)
     with open(meta_path, "r") as f:
-        cur_frame = 1
+        cur_frame = 0
         metadata = json.load(f)
         for frame, meta in metadata.items():
+            # Only get the first 2 keys namely face_rect and lm7pts
+            face_rect_lm7pt = dict(itertools.islice(meta.items(), 2))
             label = get_label(meta_path)
             filename = create_filename(save_dest, label, cur_frame, ".json")
-            print("Saving metadata for frame: {}".format(filename))
-
-            # Write metadata for the current frame to  a json file
-            # only get the first 2 keys namely face_rect and lm7pts
             with open(filename, "w") as f:
-                json.dump(metadata[frame], f)
+                json.dump(face_rect_lm7pt, f)
 
             cur_frame += 1
         return cur_frame
