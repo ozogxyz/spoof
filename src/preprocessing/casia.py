@@ -260,7 +260,7 @@ class CASIA(Dataset):
     def __init__(
         self,
         dataset_dir: str,
-        annotations_file: str,
+        annotations: str,
         meta_file: str,
         transform: Callable,
         sampler: Sampler = Sampler(),
@@ -272,7 +272,7 @@ class CASIA(Dataset):
         self.sampler = sampler
 
         # Read the annotations file
-        self.annotations_file = annotations_file
+        self.annotations = annotations
         self._read_annotations_file()
 
         # Read the metadata file
@@ -280,7 +280,7 @@ class CASIA(Dataset):
         self.meta = self._read_meta_file()
 
     def _read_annotations_file(self):
-        train_file_buf = open(self.annotations_file, "r")
+        train_file_buf = open(self.annotations, "r")
         line = train_file_buf.readline().strip()
         while line:
             image_path, label = line.split(" ")
