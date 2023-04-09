@@ -4,16 +4,16 @@ import cv2
 import numpy as np
 import pytest
 
-from src.dataset.create_sample import CreateSample
-from src.dataset.transforms import (
+from src.preprocessing.create_sample import CreateSample
+from src.preprocessing.transforms import (
     FaceRegionRCXT,
     FaceRegionXT,
     em_angle,
     lm_angle,
 )
-import src.dataset.transforms as transforms
+import src.preprocessing.transforms as transforms
 
-from src.dataset.visualize import (
+from src.visualize import (
     draw_face_rectangle,
     draw_landmark_points,
     show_frame,

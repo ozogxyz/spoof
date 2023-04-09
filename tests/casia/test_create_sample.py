@@ -1,6 +1,6 @@
 import pytest
 
-from src.dataset.create_sample import CreateSample
+from src.preprocessing.create_sample import CreateSample
 
 
 def test_create_sample(test_meta, test_frame):

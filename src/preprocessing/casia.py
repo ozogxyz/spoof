@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 import csv
-from src.dataset.create_sample import CreateSample
+from src.preprocessing.create_sample import CreateSample
 
 sampler = CreateSample()
 

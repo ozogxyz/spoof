@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from numpy import dtype, generic, ndarray
 
-from src.dataset.visualize import (
+from src.visualize import (
     draw_face_rectangle,
     draw_landmark_points,
     show_frame,
