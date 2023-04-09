@@ -80,7 +80,7 @@ def capture_frames(video_path: str, save_dest: str) -> int:
     video_name = Path(video_path).stem
     save_dest = str(Path(save_dest) / video_name)
     if cap.isOpened():
-        cur_frame = 0
+        cur_frame = 1
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -145,14 +145,14 @@ def extract_meta_per_frame(meta_path, save_dest) -> int:
     meta_name = Path(meta_path).stem
     save_dest = str(Path(save_dest) / meta_name)
     with open(meta_path, "r") as f:
-        cur_frame = 0
+        cur_frame = 1
         metadata = json.load(f)
         for frame, meta in metadata.items():
             # Only get the first 2 keys namely face_rect and lm7pts
             face_rect_lm7pt = dict(itertools.islice(meta.items(), 2))
             label = get_label(meta_path)
             # frame 0 is pitch black
-            filename = create_filename(save_dest, label, cur_frame + 1, ".json")
+            filename = create_filename(save_dest, label, cur_frame, ".json")
             with open(filename, "w") as f:
                 json.dump(face_rect_lm7pt, f)
 
@@ -296,7 +296,7 @@ class CASIA(Dataset):
             line = meta_file_buf.readline().strip()
 
     def __len__(self) -> int:
-        return len(self.train_list)
+        return len(self.meta_list)
 
     def __getitem__(self, index) -> Tuple[torch.Tensor, torch.Tensor]:
         image_path, label = self.train_list[index]
