@@ -7,6 +7,9 @@ data:
   train_meta: ${oc.env:HOME}/mipt/thesis/code/spoof/data/train_meta.txt
   ext: .avi
   meta: .json
+  batch_size: 32
+  face_region:
+    size: 224
 model:
   in_channels: 3
   num_classes: 2

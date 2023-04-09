@@ -243,7 +243,7 @@ class Sampler:
             "image": frame,
             "meta": meta,
         }
-        print(sample)
+
         return sample
 
 

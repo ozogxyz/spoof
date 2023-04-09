@@ -17,17 +17,18 @@ def main(cfg: DictConfig):
         cfg.data.train,
         cfg.data.annotations,
         cfg.data.train_meta,
-        transform=FaceRegionRCXT(cfg.data.face_region),
+        transform=FaceRegionRCXT(size=cfg.data.face_region.size),
     )
     train_dl = DataLoader(train_ds, batch_size=cfg.data.batch_size, shuffle=True)
 
     # Load model
-    model = CNN(cfg.model)
+    model = CNN(**cfg.model)
 
     # Train model
     for epoch in range(cfg.train.epochs):
         for batch in train_dl:
-            print(batch)
+            image, label = batch["image"], batch["label"]
+            print(image.shape, label.shape)
             break
 
 
