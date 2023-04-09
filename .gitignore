@@ -4,6 +4,8 @@
 **/outputs/
 **/.vscode/
 /tests/sample/*
+data/
+**/data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
