@@ -163,12 +163,14 @@ def create_annotations(
         for frame in extracted_frames:
             frame_num = int(Path(frame).stem.split("_")[-2])
             rel_frame_path = str(Path(frame).relative_to(extracted_frames_root))
+            label = 1 if rel_frame_path.split("/")[0] == "real" else 0
             if frame_num in face_rectangles and frame_num in face_landmarks:
                 annotations.append(
                     (
                         rel_frame_path,
                         face_rectangles[frame_num],
                         face_landmarks[frame_num],
+                        label,
                     )
                 )
 
@@ -183,7 +185,7 @@ def create_annotations(
 @hydra.main(version_base=None, config_path="../../", config_name="config")
 def main(cfg: DictConfig):
     video_src = cfg.data.train_videos
-    create_image_folder(video_src, cfg.data.train_images)
+    # create_image_folder(video_src, cfg.data.train_images)
     create_annotations(
         cfg.data.train_metadata, cfg.data.train_images, cfg.data.train_annotations
     )
