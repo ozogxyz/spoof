@@ -33,11 +33,3 @@ def create_meta(data_root, meta_file):
             label = Path(file).stem[-1]
             if Path(file).suffix == ".json":
                 meta_file_buf.write(file + " " + label + "\n")
-
-
-if __name__ == "__main__":
-    data_root = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/train_frames"
-    train_file = "/Users/motorbreath/mipt/thesis/code/spoof/data/train.txt"
-    meta_file = "/Users/motorbreath/mipt/thesis/code/spoof/data/meta.txt"
-    create_annotations(data_root, train_file)
-    create_meta(data_root, meta_file)
