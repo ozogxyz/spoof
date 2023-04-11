@@ -1,14 +1,15 @@
 import os
 from pathlib import Path
 import cv2
-import numpy as np
 
 import pytest
+from torchvision.transforms import Compose
 
-from src.preprocessing.casia import Sampler, extract_frames, extract_metadata, CASIA
-from src.preprocessing.transforms import FaceRegionRCXT
-from src.utils.annotations import create_annotations
-from src.utils.visualize import show_frame
+from src.preprocessing.casia import extract_frames, extract_metadata, CASIA
+from src.preprocessing.transforms import FaceRegionRCXT, MetaAddLMSquare, rect_from_lm
+
+from src.preprocessing.casia2 import CASIA2
+from src.utils.visualize import show_frame, draw_face_rectangle, draw_landmarks
 
 
 @pytest.mark.skip(reason="Slow")
@@ -81,23 +82,32 @@ def test_extract_test_meta():
 
 # @pytest.mark.skip(reason="Slow")
 def test_casia_dataset():
-    transform = FaceRegionRCXT(size=(224, 224))
-    dataset = CASIA(
-        "data/casia/train_frames",
-        annotations="data/casia/annotations.txt",
-        meta_file="data/casia/meta.txt",
+    align = FaceRegionRCXT(size=(224, 224))
+    sq = MetaAddLMSquare()
+    transform = Compose([sq, align])
+
+    dataset = CASIA2(
+        annotations_path="data/casia/images/train/annotations.json",
+        root_dir="data/casia/images/train",
         transform=transform,
-        sampler=Sampler(),
     )
 
-    assert len(dataset) == 45141
-    assert len(open("data/casia/annotations.txt").readlines()) == 45141
-    assert len(open("data/casia/meta.txt").readlines()) == 45141
+    image = dataset[0][0]["image"]
+    face_rect = dataset[0][0]["meta"]["face_rect"]
+    face_landmark = dataset[0][0]["meta"]["face_landmark"]
 
-    # convert tensor to opencv image
-    # image = dataset[1241][0].numpy().transpose(1, 2, 0)
-    # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    # face_rect = rect_from_lm(face_landmark)
 
-    # show_frame(title="Sample input to CNN", frame=image)
-    # assert len(dataset) == 45141
-    # assert image.shape == (224, 224, 3)
+    print(face_rect)
+    print(face_landmark)
+
+    draw_face_rectangle(image, face_rect)
+    draw_landmarks(image, face_landmark)
+    # show_frame(title="IMG", frame=image)
+    cv2.imwrite("tests/transformed_img.jpg", img=image)
+
+    assert len(dataset) == 44673
+    assert len(dataset[0]) == 2
+    assert dataset[0][0]["image"].shape == (224, 224, 3)
+    assert len(dataset[0][0]["meta"]["face_rect"]) == 4
+    assert dataset[0][0]["meta"]["face_landmark"].shape == (7, 2)
