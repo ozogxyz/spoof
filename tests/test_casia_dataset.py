@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import cv2
 
 import pytest
 from torchvision.transforms import Compose
@@ -81,9 +82,9 @@ def test_extract_test_meta():
 
 # @pytest.mark.skip(reason="Slow")
 def test_casia_dataset():
-    rcxt = FaceRegionRCXT(square=True)
+    align = FaceRegionRCXT(size=(224, 224))
     sq = MetaAddLMSquare()
-    transform = Compose([rcxt, sq])
+    transform = Compose([sq, align])
 
     dataset = CASIA2(
         annotations_path="data/casia/images/train/annotations.json",
@@ -100,11 +101,10 @@ def test_casia_dataset():
     print(face_rect)
     print(face_landmark)
 
-    assert 1 == 3
-
     draw_face_rectangle(image, face_rect)
     draw_landmarks(image, face_landmark)
-    show_frame(title="IMG", frame=image)
+    # show_frame(title="IMG", frame=image)
+    cv2.imwrite("tests/transformed_img.jpg", img=image)
 
     assert len(dataset) == 44673
     assert len(dataset[0]) == 2
