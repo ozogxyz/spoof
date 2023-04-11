@@ -2,12 +2,13 @@ import os
 from pathlib import Path
 
 import pytest
+from torchvision.transforms import Compose
 
 from src.preprocessing.casia import extract_frames, extract_metadata, CASIA
-from src.preprocessing.transforms import FaceRegionRCXT
+from src.preprocessing.transforms import FaceRegionRCXT, MetaAddLMSquare, rect_from_lm
 
 from src.preprocessing.casia2 import CASIA2
-from src.utils.visualize import show_frame
+from src.utils.visualize import show_frame, draw_face_rectangle, draw_landmarks
 
 
 @pytest.mark.skip(reason="Slow")
@@ -80,17 +81,33 @@ def test_extract_test_meta():
 
 # @pytest.mark.skip(reason="Slow")
 def test_casia_dataset():
-    transform = FaceRegionRCXT(crop=(224, 224))
+    rcxt = FaceRegionRCXT(square=True)
+    sq = MetaAddLMSquare()
+    transform = Compose([rcxt, sq])
+
     dataset = CASIA2(
         annotations_path="data/casia/images/train/annotations.json",
         root_dir="data/casia/images/train",
         transform=transform,
     )
 
+    image = dataset[0][0]["image"]
+    face_rect = dataset[0][0]["meta"]["face_rect"]
+    face_landmark = dataset[0][0]["meta"]["face_landmark"]
+
+    # face_rect = rect_from_lm(face_landmark)
+
+    print(face_rect)
+    print(face_landmark)
+
+    assert 1 == 3
+
+    draw_face_rectangle(image, face_rect)
+    draw_landmarks(image, face_landmark)
+    show_frame(title="IMG", frame=image)
+
     assert len(dataset) == 44673
     assert len(dataset[0]) == 2
     assert dataset[0][0]["image"].shape == (224, 224, 3)
     assert len(dataset[0][0]["meta"]["face_rect"]) == 4
     assert dataset[0][0]["meta"]["face_landmark"].shape == (7, 2)
-
-    show_frame(title="IMG", frame=dataset[0][0]["image"])

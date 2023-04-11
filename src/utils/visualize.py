@@ -20,14 +20,15 @@ def draw_face_rectangle(frame, face_rect):
     return cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
 
-def draw_landmark_points(frame, landmark_points):
+def draw_landmarks(frame, landmark_points):
     """Draw landmark points on the face.
 
     landmark_points is a list of [x, y] coordinates of length 14. To show the 7 landmark points, we
     need to zip the list and iterate over it.
     """
-    for x, y in list(zip(landmark_points[0::2], landmark_points[1::2])):
-        cv2.circle(frame, (x, y), 10, (0, 0, 255), -1)
+    landmark_points = landmark_points.reshape(-1, 2)
+    for x, y in landmark_points:
+        cv2.circle(frame, (int(x), int(y)), 3, (0, 0, 255), -1)
 
     return frame
 

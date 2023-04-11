@@ -252,7 +252,7 @@ class FaceRegionRCXT(FaceRegionXT):
         size_x = rw if self.crop is None else self.crop[0]
         size_y = rh if self.crop is None else self.crop[1]
 
-        if self.crop is None:
+        if self.crop is None and self.size is not None:
             scale_x = self.size[0] / size_x
             scale_y = self.size[1] / size_y
             dsize = self.size
@@ -276,3 +276,19 @@ class FaceRegionRCXT(FaceRegionXT):
 
         affine_mat = reset_mat @ (rot_mat @ offset_mat)
         return affine_mat[:2, :], dsize
+
+
+class MetaAddLMSquare:
+    """Create a face square from 7 point landmarks."""
+
+    def __init__(self, scale_f: Tuple[int, int] = (1, 1)):
+        self.scale_f = scale_f
+
+    def __call__(self, sample: Dict) -> Dict:
+        meta = deepcopy(sample["meta"])
+        lm_array = meta["face_landmark"]
+        lm_rect = rect_from_lm(lm_array)
+        meta["face_rect"] = np.array(lm_rect)
+        sample["meta"] = meta
+
+        return sample
