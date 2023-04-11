@@ -1,45 +1,82 @@
 import hydra
 from omegaconf import DictConfig
+import torch
 from torch.utils.data import DataLoader
+from torchvision.transforms import Compose
 
 from models.cnn import CNN
-from preprocessing.casia import CASIA
-from preprocessing.transforms import FaceRegionRCXT
 from preprocessing.casia import extract_frames, extract_metadata
-from utils.annotations import create_annotations
+from preprocessing.casia2 import CASIA2
+from preprocessing.transforms import FaceRegionRCXT, MetaAddLMSquare
+from preprocessing.casia2 import create_image_folder, create_annotations
 
 
 @hydra.main(version_base=None, config_path="../", config_name="config")
 def main(cfg: DictConfig):
     # Extract frames and metadata
     if cfg.data.extract:
-        extract_frames(cfg.data.train_videos, cfg.data.train_frames)
-        extract_metadata(cfg.data.train_meta, cfg.data.train_frames)
-        create_annotations(cfg.data.train_frames, cfg.data.annotations)
-        create_annotations(cfg.data.train_frames, cfg.data.train_meta)
+        create_image_folder(cfg.data.train_videos, cfg.data.train_images)
+        create_annotations(
+            cfg.data.train_metadata, cfg.data.train_images, cfg.data.train_annotations
+        )
+        create_image_folder(cfg.data.test_videos, cfg.data.test_images)
+        create_annotations(
+            cfg.data.test_metadata, cfg.data.test_images, cfg.data.test_annotations
+        )
 
-    # Load data
-    train_ds = CASIA(
-        cfg.data.train_videos,
-        cfg.data.annotations,
-        cfg.data.train_meta,
-        transform=FaceRegionRCXT(size=cfg.data.face_region.size),
+    # Transforms
+    align = FaceRegionRCXT(size=(224, 224))
+    sq = MetaAddLMSquare()
+    transform = Compose([sq, align])
+
+    train_ds = CASIA2(
+        annotations_path=cfg.data.train_annotations,
+        root_dir=cfg.data.train_images,
+        transform=transform,
     )
-    train_dl = DataLoader(train_ds, batch_size=cfg.data.batch_size, shuffle=False)
+
+    test_ds = CASIA2(
+        annotations_path=cfg.data.test_annotations,
+        root_dir=cfg.data.test_images,
+        transform=transform,
+    )
+
+    train_dl = DataLoader(train_ds, batch_size=cfg.data.batch_size, shuffle=True)
+    test_dl = DataLoader(test_ds, batch_size=cfg.data.batch_size, shuffle=True)
 
     # Load model
-    model = CNN(**cfg.model)
+    model = CNN(**cfg.model).to(cfg.device)
+    optimizer = hydra.utils.instantiate(cfg.optimizer, params=model.parameters())
+    criterion = hydra.utils.instantiate(cfg.criterion)
 
     # Train model
     count = 0
+    print("TRAINING")
     for epoch in range(cfg.train.epochs):
         for batch in train_dl:
-            image, label = batch
-            count += 1
-            print(image.shape, label.shape)
-        print(f"Number of epochs: {epoch}")
+            sample, label = batch
+            image = sample["image"].to(cfg.device)
+            label = label.to(cfg.device)
 
-    print(f"Number of batches: {count}")
+            # Forward pass
+            print(label)
+            output = model(image)
+            loss = criterion(output, label)
+
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+
+            # Update weights
+            optimizer.step()
+
+            count += 1
+
+            if count % 10 == 0:
+                print(f"Epoch: {epoch}, Loss: {loss.item():.4f}")
+        break
+    # Save model
+    torch.save(model.state_dict(), "model.pth")
 
 
 if __name__ == "__main__":

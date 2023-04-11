@@ -128,6 +128,11 @@ def create_annotations(
         annotations: List of tuples containing the image path, face rectangle
             and face landmarks.
     """
+    # Skip if annotations file already exist
+    if os.path.exists(annotations_path):
+        print(f"File {annotations_path} already exists. Skipping...")
+        return
+
     # Get all the metadata files
     metadata_files = [str(p) for p in Path(metadata_root).rglob("*json")]
     print(f"Found {len(metadata_files)} metadata files")
@@ -231,6 +236,8 @@ def main(cfg: DictConfig):
     create_annotations(
         cfg.data.train_metadata, cfg.data.train_images, cfg.data.train_annotations
     )
+    create_image_folder(cfg.data.test_videos, cfg.data.test_images)
+    create_annotations(cfg.test_metadata, cfg.data.test_images, cfg.data.test_annotations)
 
 
 if __name__ == "__main__":
