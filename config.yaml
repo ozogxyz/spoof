@@ -1,6 +1,6 @@
 data:
   extract: false
-  root: ${oc.env:HOME}/thesis/spoof/data/casia
+  root: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia
   train_videos: ${.root}/train/data/train
   train_metadata: ${.root}/train/meta/train
   train_images: ${.root}/images/train
