@@ -1,99 +1,67 @@
 import json
 import os
 from pathlib import Path
-import cv2
-import hydra
-import numpy as np
-from omegaconf import DictConfig
 import torch
-from torch.utils.data import Dataset
+from torchvision.transforms import Compose
 
 
-def capture_frames(src: str, dest: str) -> int:
-    """Captures frames of a video."""
-    # Open and start to read the video
-    cap = cv2.VideoCapture(src)
+import logging
 
-    if cap.isOpened():
-        cur_frame = 1
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+from spoof.transforms import FaceRegionRCXT, MetaAddLMSquare
 
-            filename = f"{dest}_frame_{cur_frame}_.jpg"
-            if os.path.exists(filename):
-                print(f"File {filename} already exists. Skipping...")
-                continue
-            cv2.imwrite(filename=filename, img=frame)
-            cur_frame += 1
-
-        cap.release()
-        cv2.destroyAllWindows()
-        return cur_frame
-
-    else:
-        print("Cannot open video file")
-        return 0
+logger = logging.getLogger(__name__)
 
 
-def create_image_folder(
-    video_src: str,
-    img_folder_root: str,
-    video_ext: str = ".avi",
-) -> int:
-    """Creates an image folder from all the videos in the directory provided. Resulting folder is
-    in torchvision ImageFolder format.
+def get_loaders(args):
+    """Creates the dataloaders for the training and testing datasets."""
+    if args.dataset == "casia":
+        from spoof.datasets import CASIA
 
-    In CASIA, if the video filename ends with 0 it's a spoof, if it ends with
-    1 it's real.
-
-    img_folder_root/real/xxx.png
-    img_folder_root/real/xxy.jpeg
-    img_folder_root/real/xxz.png
-    .
-    .
-    .
-    img_folder_root/spoof/123.jpg
-    img_folder_root/spoof/nsdf3.png
-    img_folder_root/spoof/asd932_.png
-    """
-
-    videos = [str(p) for p in Path(video_src).rglob(f"*{video_ext}")]
-
-    # Extract frames
-    total_frame_count = 0
-    print(f"Found {len(videos)} videos in {video_src}")
-    for video in videos:
-        print(f"Processing {video}")
-        if Path(video).stem[-1] == "0":
-            label = "spoof"
-        else:
-            label = "real"
-
-        # Create the destination folder
-        Path(img_folder_root).joinpath(label).mkdir(parents=True, exist_ok=True)
-
-        # Extract frames
-        frame_count = capture_frames(
-            src=video,
-            dest=str(Path(img_folder_root).joinpath(label).joinpath(Path(video).stem)),
+        train_ds = CASIA(
+            annotations_path=args.train_annotations,
+            root_dir=args.train_images,
+            transform=get_transforms(args),
         )
 
-        total_frame_count += frame_count
-    print(f"Extracted {total_frame_count} frames")
-    print(f"Extracted {total_frame_count / len(videos)} frames per video")
-    print(f"Extracted {total_frame_count / len(videos) / 30} seconds per video")
-    print("Finished extracting frames.")
-    return total_frame_count
+        test_ds = CASIA(
+            annotations_path=args.test_annotations,
+            root_dir=args.test_images,
+            transform=get_transforms(args),
+        )
+    else:
+        raise ValueError(f"Dataset {args.dataset} not supported")
+
+    train_dl = torch.utils.data.DataLoader(
+        train_ds, batch_size=args.batch_size, shuffle=True
+    )
+    test_dl = torch.utils.data.DataLoader(
+        test_ds, batch_size=args.batch_size, shuffle=True
+    )
+
+    return train_dl, test_dl
 
 
+def get_transforms(args):
+    """Returns the transforms for the training and testing datasets."""
+    if args.dataset == "casia":
+        align = FaceRegionRCXT(size=(224, 224))
+        sq = MetaAddLMSquare()
+        transform = Compose([sq, align])
+    else:
+        raise ValueError(f"Dataset {args.dataset} not supported")
+
+    return transform
+
+
+# This function is common for all datasets so it's placed in utils
 def create_annotations(
-    metadata_root: str, extracted_frames_root: str, annotations_path: str
+    metadata_root: str,
+    extracted_frames_root: str,
+    annotations_path: str,
 ):
-    """Creates the annotations file for the CASIA dataset. Only the face rectangle and landmarks
-    are extracted from the metadata. If a key is missing, meaning that the extracted frames are
-    more than the metadata, the frame is skipped.
+    """Creates the annotations file for the dataset. Only the face rectangle and landmarks are
+    extracted from the metadata. If a key is missing, meaning that the extracted frames are more
+    than the metadata, the frame is skipped.
 
     Args:
         metadata_root: Root folder of the metadata.
@@ -128,7 +96,7 @@ def create_annotations(
         annotations: List of tuples containing the image path, face rectangle
             and face landmarks.
     """
-    # Skip if annotations file already exist
+    # Skip if annotations file already exist and not overwriting
     if os.path.exists(annotations_path):
         print(f"File {annotations_path} already exists. Skipping...")
         return
@@ -150,6 +118,7 @@ def create_annotations(
             str(p)
             for p in Path(extracted_frames_root).rglob(f"{Path(metadata_file).stem}*.jpg")
         ]
+        print(extracted_frames)
 
         # Read the metadata file
         with open(metadata_file, "r") as f:
@@ -169,7 +138,7 @@ def create_annotations(
 
         # Create the annotations
         for frame in extracted_frames:
-            frame_num = int(Path(frame).stem.split("_")[-2])
+            frame_num = int(Path(frame).stem.split("_")[-1])
             rel_frame_path = str(Path(frame).relative_to(extracted_frames_root))
             label = 1 if rel_frame_path.split("/")[0] == "real" else 0
             if frame_num in face_rectangles and frame_num in face_landmarks:

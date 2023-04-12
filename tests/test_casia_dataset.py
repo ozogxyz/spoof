@@ -1,62 +1,30 @@
-import pytest
-from torch.utils.data import DataLoader
+from spoof.datasets import CASIA
 from torchvision import transforms
 
-from spoof.datasets import CASIA
 from spoof.transforms import FaceRegionRCXT, MetaAddLMSquare
+from spoof.utils.data import create_annotations
 
-from spoof.models.cnn import CNN
 
-
-@pytest.fixture
-def train_dataset():
-    return CASIA(
-        annotations_path="data/casia/images/train/annotations.json",
-        root_dir="data/casia/images/train",
+def test_casia():
+    casia = CASIA(
+        annotations_path="data/casia/test_annotations.json",
+        video_root="data/casia/test",
+        img_root="data/casia/images/test",
+        extract=False,
+        transform=transforms.Compose(
+            [MetaAddLMSquare(), FaceRegionRCXT(size=(224, 224))]
+        ),
     )
 
+    assert casia
 
-@pytest.fixture
-def test_dataset():
-    return CASIA(
-        annotations_path="data/casia/images/test/annotations.json",
-        root_dir="data/casia/images/test",
+    for i in range(10):
+        print(casia[i])
+
+    create_annotations(
+        metadata_root="data/casia/test/meta/test",
+        extracted_frames_root="data/casia/images/test",
+        annotations_path="data/casia/test_annotations.json",
     )
 
-
-@pytest.fixture
-def train_dataloader(train_dataset):
-    rxct = FaceRegionRCXT()
-    lmsq = MetaAddLMSquare()
-    transform = transforms.Compose([rxct, lmsq])
-
-    train_dataset.transform = transform
-    train_dataloader = DataLoader(
-        train_dataset, batch_size=1, shuffle=True, num_workers=1
-    )
-
-    return train_dataloader
-
-
-@pytest.fixture
-def test_dataloader(test_dataset):
-    rxct = FaceRegionRCXT()
-    lmsq = MetaAddLMSquare()
-    transform = transforms.Compose([rxct, lmsq])
-
-    test_dataset.transform = transform
-    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True, num_workers=1)
-
-    return test_dataloader
-
-
-def test_model(train_dataloader, test_dataloader):
-    model = CNN()
-    model.train()
-
-    sample, label = next(iter(train_dataloader))
-    image = sample["image"]
-    print(type(image))
-
-    output = model(image)
-    print(output)
+    print("Done")
