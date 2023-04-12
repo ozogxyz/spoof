@@ -1,12 +1,16 @@
-from spoof.datasets import CASIA
+import cv2
+import pytest
+from cv2 import imread
 from torchvision import transforms
 
+from spoof.datasets import CASIA
 from spoof.transforms import FaceRegionRCXT, MetaAddLMSquare
-from spoof.utils.data import create_annotations
+from spoof.utils.visualize import draw_face_rectangle, draw_landmarks, show_frame
 
 
-def test_casia():
-    casia = CASIA(
+@pytest.fixture(scope="module", autouse=True)
+def casia():
+    return CASIA(
         annotations_path="data/casia/test_annotations.json",
         video_root="data/casia/test",
         img_root="data/casia/images/test",
@@ -16,15 +20,19 @@ def test_casia():
         ),
     )
 
-    assert casia
 
-    for i in range(10):
-        print(casia[i])
+def test_casia_dataset(casia: CASIA):
+    sample, label = casia[5520]
+    assert sample["image"].shape == (224, 224, 3)
+    assert label == 0
 
-    create_annotations(
-        metadata_root="data/casia/test/meta/test",
-        extracted_frames_root="data/casia/images/test",
-        annotations_path="data/casia/test_annotations.json",
-    )
 
-    print("Done")
+def test_visualize_casia_dataset(casia: CASIA):
+    sample, label = casia[1130]
+    image = sample["image"]
+    face_rect = sample["meta"]["face_rect"]
+    face_landmark = sample["meta"]["face_landmark"]
+    draw_face_rectangle(image, face_rect)
+    draw_landmarks(image, face_landmark)
+    cv2.imshow("ASDFASDF", image)
+    cv2.waitKey(0)
