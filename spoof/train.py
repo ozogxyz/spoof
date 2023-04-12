@@ -1,14 +1,13 @@
 import hydra
-from omegaconf import DictConfig
 import torch
+from models.cnn import CNN
+from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from models.cnn import CNN
-from preprocessing.casia import extract_frames, extract_metadata
-from preprocessing.casia2 import CASIA2
-from preprocessing.transforms import FaceRegionRCXT, MetaAddLMSquare
-from preprocessing.casia2 import create_image_folder, create_annotations
+from spoof.datasets import CASIA
+from spoof.transforms import FaceRegionRCXT, MetaAddLMSquare
+from spoof.utils.data import create_image_folder, create_annotations
 
 
 @hydra.main(version_base=None, config_path="../", config_name="config")
@@ -29,13 +28,13 @@ def main(cfg: DictConfig):
     sq = MetaAddLMSquare()
     transform = Compose([sq, align])
 
-    train_ds = CASIA2(
+    train_ds = CASIA(
         annotations_path=cfg.data.train_annotations,
         root_dir=cfg.data.train_images,
         transform=transform,
     )
 
-    test_ds = CASIA2(
+    test_ds = CASIA(
         annotations_path=cfg.data.test_annotations,
         root_dir=cfg.data.test_images,
         transform=transform,

@@ -2,15 +2,15 @@ import pytest
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from src.preprocessing.casia2 import CASIA2
-from src.preprocessing.transforms import FaceRegionRCXT, MetaAddLMSquare
+from spoof.datasets import CASIA
+from spoof.transforms import FaceRegionRCXT, MetaAddLMSquare
 
-from src.models.cnn import CNN
+from spoof.models.cnn import CNN
 
 
 @pytest.fixture
 def train_dataset():
-    return CASIA2(
+    return CASIA(
         annotations_path="data/casia/images/train/annotations.json",
         root_dir="data/casia/images/train",
     )
@@ -18,7 +18,7 @@ def train_dataset():
 
 @pytest.fixture
 def test_dataset():
-    return CASIA2(
+    return CASIA(
         annotations_path="data/casia/images/test/annotations.json",
         root_dir="data/casia/images/test",
     )
