@@ -135,3 +135,11 @@ class CASIA(Dataset):
         print(f"Extracted {total_frame_count} frames")
         print("Finished extracting frames.")
         return total_frame_count
+
+
+class LCC_FASD:
+    pass
+
+
+class ReplayAttack:
+    pass

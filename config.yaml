@@ -19,6 +19,8 @@ model:
   num_classes: 2
 train:
   epochs: 10
+  batch_size: 25
+  num_workers: 4
 optimizer:
   _target_: torch.optim.Adam
   _partial_: true
@@ -28,4 +30,10 @@ optimizer:
 criterion:
   _target_: torch.nn.BCELoss
 
-device: cuda
+device: mps
+dataset:
+  root: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia
+  annotations_path: ${.root}/train_annotations.json
+  video_root: ${.root}/train/data/train
+  img_root: ${.root}/images/train
+  extract: false

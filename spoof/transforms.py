@@ -1,5 +1,4 @@
 import random
-import warnings
 from copy import deepcopy
 from typing import Dict, List, Tuple
 
@@ -280,9 +279,6 @@ class FaceRegionRCXT(FaceRegionXT):
 
 class MetaAddLMSquare:
     """Create a face square from 7 point landmarks."""
-
-    def __init__(self, scale_f: Tuple[int, int] = (1, 1)):
-        self.scale_f = scale_f
 
     def __call__(self, sample: Dict) -> Dict:
         meta = deepcopy(sample["meta"])

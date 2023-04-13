@@ -1,44 +1,13 @@
 import json
+import logging
 import os
 from pathlib import Path
-import torch
+
 from torchvision.transforms import Compose
 
-
-import logging
-
-from spoof.transforms import FaceRegionRCXT, MetaAddLMSquare
+from transforms import FaceRegionRCXT, MetaAddLMSquare
 
 logger = logging.getLogger(__name__)
-
-
-def get_loaders(args):
-    """Creates the dataloaders for the training and testing datasets."""
-    if args.dataset == "casia":
-        from spoof.datasets import CASIA
-
-        train_ds = CASIA(
-            annotations_path=args.train_annotations,
-            root_dir=args.train_images,
-            transform=get_transforms(args),
-        )
-
-        test_ds = CASIA(
-            annotations_path=args.test_annotations,
-            root_dir=args.test_images,
-            transform=get_transforms(args),
-        )
-    else:
-        raise ValueError(f"Dataset {args.dataset} not supported")
-
-    train_dl = torch.utils.data.DataLoader(
-        train_ds, batch_size=args.batch_size, shuffle=True
-    )
-    test_dl = torch.utils.data.DataLoader(
-        test_ds, batch_size=args.batch_size, shuffle=True
-    )
-
-    return train_dl, test_dl
 
 
 def get_transforms(args):
