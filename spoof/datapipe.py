@@ -54,7 +54,7 @@ def sample_reader(inputs):
 
     label = inputs.get("labels")
     filename = os.path.join(IMG_ROOT, filename)
-    image = cv2.imread(filename).transpose(1, 0, 2)
+    image = cv2.imread(filename).transpose(2, 0, 1)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     sample = {
@@ -85,16 +85,6 @@ def build_datapipes(root_dir="."):
     datapipe = datapipe.map(sample_reader)
     datapipe = datapipe.map(train_transform)
     return datapipe
-
-
-def create_dataloader(datapipe, args):
-    dl = DataLoader(
-        dataset=datapipe,
-        batch_size=args.train.batch_size,
-        shuffle=True,
-        num_workers=args.train.num_workers,
-    )
-    return dl
 
 
 def main():
