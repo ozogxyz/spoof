@@ -14,15 +14,19 @@ def trainer(cfg, model, train_loader, criterion, optimizer):
         model.train()
         for i, (images, labels) in enumerate(train_loader):
             images = images.to(cfg.device).transpose(1, 3)
-            labels = labels.to(cfg.device)
+            labels = labels.to(cfg.device).float()
+
+            # Forward pass
             outputs = model(images)
-            preds = torch.argmax(outputs, dim=1)
 
-            print(preds)
-            print(labels)
+            # Get predictions
+            preds = torch.argmax(outputs, dim=1).float()
 
+            # Calculate loss
             loss = criterion(preds, labels)
             optimizer.zero_grad()
+
+            # Backward pass
             loss.backward()
             optimizer.step()
             if (i + 1) % cfg.train.log_interval == 0:
