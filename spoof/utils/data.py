@@ -1,25 +1,26 @@
 import json
+import csv
 import logging
 import os
 from pathlib import Path
 
 from torchvision.transforms import Compose
 
-from transforms import FaceRegionRCXT, MetaAddLMSquare
+# from transforms import FaceRegionRCXT, MetaAddLMSquare
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 
-def get_transforms(args):
-    """Returns the transforms for the training and testing datasets."""
-    if args.dataset == "casia":
-        align = FaceRegionRCXT(size=(224, 224))
-        sq = MetaAddLMSquare()
-        transform = Compose([sq, align])
-    else:
-        raise ValueError(f"Dataset {args.dataset} not supported")
+# def get_transforms(args):
+#     """Returns the transforms for the training and testing datasets."""
+#     if args.dataset == "casia":
+#         align = FaceRegionRCXT(size=(224, 224))
+#         sq = MetaAddLMSquare()
+#         transform = Compose([sq, align])
+#     else:
+#         raise ValueError(f"Dataset {args.dataset} not supported")
 
-    return transform
+#     return transform
 
 
 # This function is common for all datasets so it's placed in utils
@@ -87,7 +88,6 @@ def create_annotations(
             str(p)
             for p in Path(extracted_frames_root).rglob(f"{Path(metadata_file).stem}*.jpg")
         ]
-        print(extracted_frames)
 
         # Read the metadata file
         with open(metadata_file, "r") as f:
@@ -121,8 +121,22 @@ def create_annotations(
                 )
 
     # Save the annotations as a json file
+    # print(f"Saving annotations to {annotations_path}")
+    # with open(annotations_path, "w") as f:
+    #     json.dump(annotations, f)
+
+    # Split the face rectangle and landmarks into separate columns
+    annotations = [(row[0], *row[1], *row[2], row[3]) for row in annotations]
+
+    # Save the annotations as a csv file
     print(f"Saving annotations to {annotations_path}")
     with open(annotations_path, "w") as f:
-        json.dump(annotations, f)
+        writer = csv.writer(f)
+        writer.writerows(annotations)
 
-    print(f"Created {len(annotations)} annotations")
+
+if __name__ == "__main__":
+    m = "../../data/casia/test/meta/test"
+    e = "../../data/casia/images/test"
+    a = "../../data/casia/test_annotations.csv"
+    create_annotations(m, e, a)
