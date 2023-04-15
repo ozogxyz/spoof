@@ -8,8 +8,8 @@ setup(
     description="Face Spoofing Detection",
     author="Orkun Ozoglu",
     author_email="ozoglu.o@python.edu",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(where="spoof"),
+    package_dir={"": "spoof"},
     python_requires=">=3.10",
     install_requires=[
         "hydra-core==1.3.2",
