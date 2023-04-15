@@ -79,8 +79,8 @@ def sample_reader(inputs):
 def row_processor(row):
     return {
         "image": row[0],
-        "face_rect": np.array(row[1:5]).astype(np.float16),
-        "face_landmark": np.array(row[5:-1]).astype(np.float16).reshape(-1, 2),
+        "face_rect": np.array(row[1:5]).astype(np.ushort),
+        "face_landmark": np.array(row[5:-1]).astype(np.ushort).reshape(-1, 2),
         "labels": int(row[-1]),
     }
 

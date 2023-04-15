@@ -10,7 +10,7 @@ data:
   root: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia/images
   train: ${.root}/train
   test: ${.root}/test
-  batch_size: 512
+  batch_size: 64
 
 dataset:
   root: ${oc.env:HOME}/thesis/spoof/data/casia

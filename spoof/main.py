@@ -8,6 +8,8 @@ from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 from trainer import trainer
 
+torch.cuda.empty_cache()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
