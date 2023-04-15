@@ -38,7 +38,7 @@ def main(cfg: DictConfig) -> None:
     logger.info("Creating model, loss and optimizer")
     # model = timm.create_model(cfg.model.name, pretrained=True).to(cfg.device)
     model = ViT().to(cfg.device)
-    criterion = torch.nn.functional.binary_cross_entropy
+    criterion = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.train.lr)
     assert model is not None, logger.error("Error creating model")
     assert criterion is not None, logger.error("Error creating loss")

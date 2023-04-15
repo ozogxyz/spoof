@@ -27,6 +27,7 @@ def trainer(cfg, model, train_loader, criterion, optimizer):
             optimizer.zero_grad()
 
             # Backward pass
+            loss.requires_grad = True
             loss.backward()
             optimizer.step()
             if (i + 1) % cfg.train.log_interval == 0:
