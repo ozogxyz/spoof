@@ -3,24 +3,7 @@ import csv
 import logging
 import os
 from pathlib import Path
-
-from torchvision.transforms import Compose
-
-# from transforms import FaceRegionRCXT, MetaAddLMSquare
-
-# logger = logging.getLogger(__name__)
-
-
-# def get_transforms(args):
-#     """Returns the transforms for the training and testing datasets."""
-#     if args.dataset == "casia":
-#         align = FaceRegionRCXT(size=(224, 224))
-#         sq = MetaAddLMSquare()
-#         transform = Compose([sq, align])
-#     else:
-#         raise ValueError(f"Dataset {args.dataset} not supported")
-
-#     return transform
+import cv2
 
 
 # This function is common for all datasets so it's placed in utils
@@ -108,22 +91,18 @@ def create_annotations(
         # Create the annotations
         for frame in extracted_frames:
             frame_num = int(Path(frame).stem.split("_")[-1])
+            # To get real or spoof folder name
             rel_frame_path = str(Path(frame).relative_to(extracted_frames_root))
             label = 1 if rel_frame_path.split("/")[0] == "real" else 0
             if frame_num in face_rectangles and frame_num in face_landmarks:
                 annotations.append(
                     (
-                        rel_frame_path,
+                        str(Path(frame)),
                         face_rectangles[frame_num],
                         face_landmarks[frame_num],
                         label,
                     )
                 )
-
-    # Save the annotations as a json file
-    # print(f"Saving annotations to {annotations_path}")
-    # with open(annotations_path, "w") as f:
-    #     json.dump(annotations, f)
 
     # Split the face rectangle and landmarks into separate columns
     annotations = [(row[0], *row[1], *row[2], row[3]) for row in annotations]
@@ -135,8 +114,93 @@ def create_annotations(
         writer.writerows(annotations)
 
 
+def capture_frames(src: str, dest: str) -> int:
+    """Captures frames of a video."""
+    # Open and start to read the video
+    cap = cv2.VideoCapture(src)
+
+    if cap.isOpened():
+        cur_frame = 1
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            filename = f"{dest}_frame_{cur_frame}.jpg"
+            if os.path.exists(filename):
+                print(f"File {filename} already exists. Skipping...")
+                continue
+            cv2.imwrite(filename=filename, img=frame)
+            cur_frame += 1
+
+        cap.release()
+        cv2.destroyAllWindows()
+        return cur_frame
+
+    else:
+        print("Cannot open video file")
+        return 0
+
+
+def extract(
+    root_dir: str,
+    extract_to: str,
+    video_ext: str = ".avi",
+) -> int:
+    """Creates an image folder from all the videos in the directory provided. Resulting folder is
+    in torchvision ImageFolder format.
+    In CASIA, if the video filename ends with 0 it's a spoof, if it ends with
+    1 it's real.
+    extract_to/real/xxx.png
+    extract_to/real/xxy.jpeg
+    extract_to/real/xxz.png
+    .
+    .
+    .
+    extract_to/spoof/123.jpg
+    extract_to/spoof/nsdf3.png
+    extract_to/spoof/asd932_.png
+    """
+
+    videos = [str(p) for p in Path(root_dir).rglob(f"*{video_ext}")]
+
+    # Extract frames
+    total_frame_count = 0
+    print(f"Found {len(videos)} videos in {root_dir}")
+    for video in videos:
+        print(f"Processing {video}")
+        if Path(video).stem[-1] == "0":
+            label = "spoof"
+        else:
+            label = "real"
+
+        # Create the destination folder
+        Path(extract_to).joinpath(label).mkdir(parents=True, exist_ok=True)
+
+        # Extract frames
+        frame_count = capture_frames(
+            src=video,
+            dest=str(Path(extract_to).joinpath(label).joinpath(Path(video).stem)),
+        )
+
+        total_frame_count += frame_count
+    print(f"Extracted {total_frame_count} frames")
+    print("Finished extracting frames.")
+    return total_frame_count
+
+
 if __name__ == "__main__":
-    m = "../../data/casia/test/meta/test"
-    e = "../../data/casia/images/test"
-    a = "../../data/casia/test_annotations.csv"
-    create_annotations(m, e, a)
+    tr_meta = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/train/meta/train"
+    tr_extr = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/train"
+    tr_an = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/train/train.csv"
+    tr_vid = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/train/data/train"
+
+    ts_vid = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/test/data/test"
+    ts_meta = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/test/meta/test"
+    ts_extr = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/test"
+    ts_an = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/test/test.csv"
+
+    # extract(tr_vid, tr_extr)
+    # extract(ts_vid, ts_extr)
+    create_annotations(tr_meta, tr_extr, tr_an)
+    create_annotations(ts_meta, ts_extr, ts_an)

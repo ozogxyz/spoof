@@ -2,19 +2,18 @@ model:
   name: vit_large_patch16_224
   save_path: ${oc.env:HOME}/mipt/thesis/code/spoof/models/model.ckpt
   params:
-    img_size : 224
-    in_chans : 3
-    num_classes : 2
-    global_pool : 'token'
+    img_size: 224
+    in_chans: 3
+    num_classes: 2
+    global_pool: "token"
 data:
-  root: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia
+  root: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia/images
   train: ${.root}/train
   test: ${.root}/test
   batch_size: 512
 
-
 dataset:
-  root: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia
+  root: ${oc.env:HOME}/thesis/spoof/data/casia
   params:
     annotations_path: ${..root}/train_annotations.csv
     video_root: ${..root}/train/data/train
@@ -36,4 +35,4 @@ optimizer:
 criterion:
   _target_: torch.nn.BCELoss
 
-device: mps
+device: cuda

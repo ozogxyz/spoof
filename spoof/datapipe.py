@@ -1,14 +1,13 @@
-import os
+import logging
 
 import cv2
 import numpy as np
 import torchdata.datapipes as dp
-from torch.utils.data import DataLoader
 from torchvision import transforms
 from transforms import FaceRegionRCXT, MetaAddLMSquare
 
-IMG_ROOT = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/train/"
-ANN_ROOT = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/train/"
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def train_transform(inputs):
@@ -22,14 +21,15 @@ def train_transform(inputs):
     sample = {"image": image, "meta": meta}
 
     # Transform the sample
-    align = FaceRegionRCXT(size=(224, 224), crop=(224, 224))
+    align = FaceRegionRCXT(crop=(224, 224))
     sq = MetaAddLMSquare()
     transform = transforms.Compose([align, sq])
     sample = transform(sample)
 
     # Extract the image and label
     image = sample["image"]
-    image = image.transpose(1, 2, 0)
+
+    print(f"TRANSFORMED SHAPE: {image.shape}")
 
     return image, label
 
@@ -53,7 +53,6 @@ def sample_reader(inputs):
     face_landmark = inputs.get("face_landmark")
 
     label = inputs.get("labels")
-    filename = os.path.join(IMG_ROOT, filename)
     image = cv2.imread(filename).transpose(2, 0, 1)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -75,7 +74,7 @@ def row_processor(row):
     }
 
 
-def build_datapipes(root_dir="."):
+def build_datapipes(root_dir):
     datapipe = dp.iter.FileLister([root_dir]).filter(filter_for_data)
     datapipe = datapipe.open_files(mode="rt")
     datapipe = datapipe.parse_csv(delimiter=",")
@@ -85,21 +84,3 @@ def build_datapipes(root_dir="."):
     datapipe = datapipe.map(sample_reader)
     datapipe = datapipe.map(train_transform)
     return datapipe
-
-
-def main():
-    datapipe = build_datapipes(ANN_ROOT)
-    dl = DataLoader(
-        dataset=datapipe,
-        batch_size=32,
-        shuffle=True,
-        num_workers=10,
-    )
-
-    for batch in dl:
-        print(batch)
-        break
-
-
-if __name__ == "__main__":
-    main()

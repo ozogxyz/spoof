@@ -10,28 +10,25 @@ from torch.utils.data import DataLoader
 from trainer import trainer
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-TRAIN_ROOT = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/train/"
-TEST_ROOT = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/test/"
 
 
 @hydra.main(version_base=None, config_path="..", config_name="config")
 def main(cfg: DictConfig) -> None:
     # Build train and test datapipes and dataloaders
     logger.info("Building train and test datapipes")
-    train_ds = build_datapipes(TRAIN_ROOT)
-    test_ds = build_datapipes(TEST_ROOT)
-    # assert train_ds is not None, logger.error("Error creating train datapipe")
-    # assert test_ds is not None, logger.error("Error creating test datapipe")
+    train_ds = build_datapipes(cfg.data.train)
+    test_ds = build_datapipes(cfg.data.test)
+    assert train_ds is not None, logger.error("Error creating train datapipe")
+    assert test_ds is not None, logger.error("Error creating test datapipe")
     logger.info("Train and test datapipes created")
 
     logger.info("Building train and test dataloaders")
     train_dl = DataLoader(train_ds, shuffle=True, batch_size=cfg.data.batch_size)
     test_dl = DataLoader(test_ds, shuffle=False, batch_size=cfg.data.batch_size)
-    # assert train_dl is not None, logger.error("Error creating train dataloader")
-    # assert test_dl is not None, logger.error("Error creating test dataloader")
+    assert train_dl is not None, logger.error("Error creating train dataloader")
+    assert test_dl is not None, logger.error("Error creating test dataloader")
     logger.info("Train and test dataloaders created")
 
     # Model, loss and optimizer
@@ -39,14 +36,14 @@ def main(cfg: DictConfig) -> None:
     model = timm.create_model(cfg.model.name, pretrained=True).to(cfg.device)
     criterion = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.train.lr)
-    # assert model is not None, logger.error("Error creating model")
-    # assert criterion is not None, logger.error("Error creating loss")
-    # assert optimizer is not None, logger.error("Error creating optimizer")
+    assert model is not None, logger.error("Error creating model")
+    assert criterion is not None, logger.error("Error creating loss")
+    assert optimizer is not None, logger.error("Error creating optimizer")
     logger.info("Model, loss and optimizer created")
 
     # Get the pretrained weights
     pretrained_weights = model.state_dict()
-    # assert pretrained_weights is not None, logger.error("Error getting weights")
+    assert pretrained_weights is not None, logger.error("Error getting weights")
     logging.info("Pretrained weights loaded")
 
     # Train the model
