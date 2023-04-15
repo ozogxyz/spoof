@@ -35,4 +35,4 @@ optimizer:
 criterion:
   _target_: torch.nn.BCELoss
 
-device: cuda
+device: mps

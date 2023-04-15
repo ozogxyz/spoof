@@ -1,5 +1,7 @@
 import logging
 
+import torch
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -10,11 +12,16 @@ def trainer(cfg, model, train_loader, criterion, optimizer):
         logger.info(f"Epoch {epoch + 1}/{cfg.train.epochs}")
         # Train the model
         model.train()
-        for i, (image, label) in enumerate(train_loader):
-            image = image.to(cfg.device).transpose(1, 3)
-            label = label.to(cfg.device)
-            outputs = model(image)
-            loss = criterion(outputs, label)
+        for i, (images, labels) in enumerate(train_loader):
+            images = images.to(cfg.device).transpose(1, 3)
+            labels = labels.to(cfg.device)
+            outputs = model(images)
+            preds = torch.argmax(outputs, dim=1)
+
+            print(preds)
+            print(labels)
+
+            loss = criterion(preds, labels)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

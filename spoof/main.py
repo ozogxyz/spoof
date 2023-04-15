@@ -8,9 +8,11 @@ from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 from trainer import trainer
 
+from models import ViT
+
 torch.cuda.empty_cache()
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -34,7 +36,8 @@ def main(cfg: DictConfig) -> None:
 
     # Model, loss and optimizer
     logger.info("Creating model, loss and optimizer")
-    model = timm.create_model(cfg.model.name, pretrained=True).to(cfg.device)
+    # model = timm.create_model(cfg.model.name, pretrained=True).to(cfg.device)
+    model = ViT().to(cfg.device)
     criterion = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.train.lr)
     assert model is not None, logger.error("Error creating model")

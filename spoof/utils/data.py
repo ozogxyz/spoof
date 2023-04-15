@@ -190,15 +190,15 @@ def extract(
 
 
 if __name__ == "__main__":
-    tr_meta = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/train/meta/train"
-    tr_extr = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/train"
-    tr_an = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/train/train.csv"
-    tr_vid = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/train/data/train"
+    tr_meta = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/train/meta/train"
+    tr_extr = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/train"
+    tr_an = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/train/train.csv"
+    tr_vid = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/train/data/train"
 
-    ts_vid = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/test/data/test"
-    ts_meta = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/test/meta/test"
-    ts_extr = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/test"
-    ts_an = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/test/test.csv"
+    ts_vid = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/test/data/test"
+    ts_meta = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/test/meta/test"
+    ts_extr = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/test"
+    ts_an = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/test/test.csv"
 
     extract(tr_vid, tr_extr)
     extract(ts_vid, ts_extr)

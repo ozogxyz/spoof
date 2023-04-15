@@ -6,7 +6,7 @@ import torchdata.datapipes as dp
 from torchvision import transforms
 from transforms import FaceRegionRCXT, MetaAddLMSquare
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -15,9 +15,9 @@ def filter_for_data(filename):
 
 
 def apply_transform(inputs):
-    logger.info("ENTERING TRANSFORM")
+    logger.debug("ENTERING TRANSFORM")
     image = inputs.get("image")
-    logger.info(f"BEFORE TRANSFORM: {image.shape}")
+    logger.debug(f"BEFORE TRANSFORM: {image.shape}")
     face_rect = inputs.get("face_rect")
     face_landmark = inputs.get("face_landmark")
     label = inputs.get("label")
@@ -42,7 +42,7 @@ def apply_transform(inputs):
 
     # Model expects (224, 224, 3)
     image = image.transpose(0, 2)
-    logger.info(f"AFTER TRANSFORM: {image.shape}")
+    logger.debug(f"AFTER TRANSFORM: {image.shape}")
 
     return image, label
 
@@ -57,7 +57,7 @@ def sample_reader(inputs):
         "label": label,
     }
     """
-    # logger.info("ENTERING SAMPLE_READER")
+    # logger.debug("ENTERING SAMPLE_READER")
     filename = inputs.get("image")
     face_rect = inputs.get("face_rect")
     face_landmark = inputs.get("face_landmark")
@@ -72,7 +72,7 @@ def sample_reader(inputs):
         "face_landmark": face_landmark,
         "label": label,
     }
-    # logger.info("LEAVING SAMPLE_READER")
+    # logger.debug("LEAVING SAMPLE_READER")
     return sample
 
 
