@@ -200,7 +200,7 @@ if __name__ == "__main__":
     ts_extr = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/test"
     ts_an = "/home/o-ozoglu/mipt/thesis/code/spoof/data/casia/images/test/test.csv"
 
-    # extract(tr_vid, tr_extr)
-    # extract(ts_vid, ts_extr)
+    extract(tr_vid, tr_extr)
+    extract(ts_vid, ts_extr)
     create_annotations(tr_meta, tr_extr, tr_an)
     create_annotations(ts_meta, ts_extr, ts_an)

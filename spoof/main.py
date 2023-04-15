@@ -4,19 +4,17 @@ import hydra
 import timm
 import torch
 from datapipe import build_datapipes
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from torch.utils.data import DataLoader
-
 from trainer import trainer
 
-
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 @hydra.main(version_base=None, config_path="..", config_name="config")
 def main(cfg: DictConfig) -> None:
-    # Build train and test datapipes and dataloaders
+    # Build train and test datapipes
     logger.info("Building train and test datapipes")
     train_ds = build_datapipes(cfg.data.train)
     test_ds = build_datapipes(cfg.data.test)
@@ -24,6 +22,7 @@ def main(cfg: DictConfig) -> None:
     assert test_ds is not None, logger.error("Error creating test datapipe")
     logger.info("Train and test datapipes created")
 
+    # Build train and test datapipes
     logger.info("Building train and test dataloaders")
     train_dl = DataLoader(train_ds, shuffle=True, batch_size=cfg.data.batch_size)
     test_dl = DataLoader(test_ds, shuffle=False, batch_size=cfg.data.batch_size)

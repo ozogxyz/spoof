@@ -1,5 +1,5 @@
 model:
-  name: vit_large_patch16_224
+  name: vit_base_patch16_224
   save_path: ${oc.env:HOME}/mipt/thesis/code/spoof/models/model.ckpt
   params:
     img_size: 224
