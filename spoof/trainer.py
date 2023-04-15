@@ -1,3 +1,4 @@
+from copy import copy
 import logging
 
 import torch
@@ -8,6 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 def trainer(cfg, model, train_loader, criterion, optimizer):
+    # load the pretrained weights
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_acc = 0.0
+
     for epoch in range(cfg.train.epochs):
         logger.info(f"Epoch {epoch + 1}/{cfg.train.epochs}")
         # Train the model
@@ -32,11 +37,13 @@ def trainer(cfg, model, train_loader, criterion, optimizer):
             optimizer.step()
             if (i + 1) % cfg.train.log_interval == 0:
                 print(
-                    f"Epoch [{epoch + 1}/{cfg.train.epochs}], Step [{i + 1}/{len(train_loader)}], Loss: {loss.item():.4f}"
+                    f"Epoch [{epoch + 1}/{cfg.train.epochs}], Step [{i + 1}/{45141}], Loss: {loss.item():.4f}"
                 )
             logger.info(
                 "Epoch [{}/{}], Loss: {:.4f}".format(
                     epoch + 1, cfg.train.epochs, loss.item()
                 )
             )
+        best_model_wts = copy.deepcopy(model.state_dict())
+
         logger.info("Training phase complete for epoch {}".format(epoch + 1))

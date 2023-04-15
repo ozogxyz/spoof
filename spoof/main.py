@@ -46,9 +46,9 @@ def main(cfg: DictConfig) -> None:
     logger.info("Model, loss and optimizer created")
 
     # Get the pretrained weights
-    pretrained_weights = model.state_dict()
-    assert pretrained_weights is not None, logger.error("Error getting weights")
-    logging.info("Pretrained weights loaded")
+    # pretrained_weights = model.state_dict()
+    # assert pretrained_weights is not None, logger.error("Error getting weights")
+    # logging.info("Pretrained weights loaded")
 
     # Train the model
     logger.info("Training model")
