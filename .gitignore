@@ -6,6 +6,9 @@
 /tests/sample/*
 data/
 **/data/
+**/*.pth
+models/
+tests
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
