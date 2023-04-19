@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from timm.models.vision_transformer import VisionTransformer
 from timm import create_model
@@ -25,3 +26,4 @@ class ViT(nn.Module):
         x = self.softmax(x)
 
         return x
+
