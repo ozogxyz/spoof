@@ -8,7 +8,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, TQDMProgressBar
 import torch
 
-sys.path.append(r"E:/rep/spoof")
+sys.path.append(r"../spoof")
 logger = logging.getLogger(__name__)
 
 
@@ -25,9 +25,7 @@ def parse_args():
     parser.add_argument(
         "-b", "--batch-size", default=64, type=int, help="train batch size"
     )
-    parser.add_argument(
-        "-e", "--epochs", default=1, type=int, help="train epoch count"
-    )
+    parser.add_argument("-e", "--epochs", default=1, type=int, help="train epoch count")
     parser.add_argument(
         "-t",
         "--train_dir",
@@ -68,9 +66,7 @@ def test_trainval_loop(args):
     config_training_system["train_batch_size"] = args.batch_size
 
     # instantiate PL training system, containing loss function, model, data and training/validation loops
-    training_system = hydra.utils.instantiate(
-        config_training_system, _recursive_=False
-    )
+    training_system = hydra.utils.instantiate(config_training_system, _recursive_=False)
 
     # prepare params for trainer class
     params_trainer = config_training_system["trainer_params"]

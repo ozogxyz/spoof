@@ -5,9 +5,7 @@ from .base import LossModule
 
 
 class ClassifierBinary(LossModule):
-    """
-    this is an example class for binary classification loss
-    """
+    """this is an example class for binary classification loss."""
 
     def __init__(
         self,
@@ -34,9 +32,7 @@ class ClassifierBinary(LossModule):
 
 
 class ClassifierMulti(LossModule):
-    """
-    this is an example class for multiclass classification loss
-    """
+    """this is an example class for multiclass classification loss."""
 
     def forward(self, **allvars):
         logits = allvars.get(self.tag_pred)

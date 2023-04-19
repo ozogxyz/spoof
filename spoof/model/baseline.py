@@ -3,9 +3,7 @@ from torch import nn
 
 
 class DummyModel(nn.Module):
-    """
-    this is a dummy example of model class
-    """
+    """this is a dummy example of model class."""
 
     def __init__(self, num_classes=1, dim_embedding=16):
         super().__init__()

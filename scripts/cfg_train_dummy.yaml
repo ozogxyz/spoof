@@ -3,13 +3,13 @@ training_system:
   log_freq: 0.1
   train_vis_freq: 0.2
   val_vis_freq: 0.2
-      
+
   lr: 0.001
   weight_decay: 0.00001
-      
+
   train_batch_size: 64
   eval_batch_size: 32
-    
+
   model:
     _target_: spoof.model.DummyModel
     num_classes: 1

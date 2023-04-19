@@ -1,9 +1,7 @@
 import logging
 
-
 import torch
 from torch.utils.data import Dataset
-
 
 logger = logging.getLogger("spoofds")
 logger.setLevel(logging.INFO)
