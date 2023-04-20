@@ -28,12 +28,12 @@ training_system:
     train:
       _target_: spoof.dataset.CasiaDataset
       annotations_file: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia/images/train/train.csv
-      num_samples: 40000
+      num_samples: 44672
       image_size: 224
     val_base:
       _target_: spoof.dataset.CasiaDataset
-      annotations_file: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia/images/train/train.csv
-      num_samples: 5141
+      annotations_file: ${oc.env:HOME}/mipt/thesis/code/spoof/data/casia/images/test/test.csv
+      num_samples: 5888
       image_size: 224
     test:
       _target_: spoof.dataset.CasiaDataset

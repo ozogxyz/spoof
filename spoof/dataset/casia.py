@@ -1,28 +1,19 @@
 import logging
+import sys
 
 import cv2
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-import sys
-
 sys.path.append("../spoof")
+from torchvision.transforms import Compose, Normalize, ToTensor
+
 import spoof
 from spoof.utils.transforms import FaceRegionRCXT, MetaAddLMSquare
-from torchvision.transforms import Compose
-from torchvision.transforms import ToTensor, Normalize
 
 logger = logging.getLogger("spoofds")
 logger.setLevel(logging.INFO)
-
-
-casia_transform = Compose(
-    [
-        FaceRegionRCXT(crop=(224, 224)),
-        MetaAddLMSquare(),
-    ]
-)
 
 
 class CasiaDataset(Dataset):
@@ -31,15 +22,13 @@ class CasiaDataset(Dataset):
         annotations_file: str,
         num_samples: int,
         image_size: int,
-        transforms=casia_transform,
     ):
         self.annotations = pd.read_csv(annotations_file)
         self.num_samples = num_samples
         self.image_size = image_size
-        self.transforms = transforms
 
     def __len__(self):
-        return len(self.annotations)
+        return self.num_samples
 
     def __getitem__(self, idx):
         img_path = self.annotations.iloc[idx, 0]
@@ -60,7 +49,7 @@ class CasiaDataset(Dataset):
         }
         meta = {"face_rect": face_rect, "face_landmark": face_landmark}
         sample = {"image": img_cv2, "meta": meta}
-        img_transformed = self.transforms(sample)
+        img_transformed = self._transforms(sample)
 
         norm = Compose([ToTensor()])
         img_tensor = norm(img_transformed["image"])
@@ -72,7 +61,17 @@ class CasiaDataset(Dataset):
             "label": label,
             "filename": filename,
         }
+
         return sample_dict
+
+    def _transforms(self, sample):
+        tr = Compose(
+            [
+                FaceRegionRCXT(crop=(self.image_size, self.image_size)),
+                MetaAddLMSquare(),
+            ]
+        )
+        return tr(sample)
 
 
 if __name__ == "__main__":

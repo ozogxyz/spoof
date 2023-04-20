@@ -25,12 +25,12 @@ class ViT(nn.Module):
         self.extractor = create_model("vit_base_patch16_224", pretrained=True)
         self.extractor.head = nn.Identity()
 
-        # Freeze the transformer
-        for param in self.extractor.parameters():
-            param.requires_grad = False
-
         # Replace the last layer of the transformer with custom MLP
         self.classifier = nn.Linear(dim_embedding, num_classes)
+
+    def freeze_backbone(self):
+        for param in self.extractor.parameters():
+            param.requires_grad = False
 
     def get_liveness_score(self, out_dict):
         out_logit = out_dict["out_logit"]

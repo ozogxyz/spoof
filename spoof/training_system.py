@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import warnings
 from argparse import Namespace
@@ -17,6 +18,9 @@ from utils.metrics import LABEL_LIVE, accuracy, eer, fcl, lcf
 # Lightning prints lots of stuff to STDOUT, might be useful to suppress it
 # warnings.filterwarnings(action="ignore", module="pytorch_lightning.utilities.data")
 # warnings.filterwarnings(action="ignore", module="pytorch_lightning.trainer.data_loading")
+
+logger = logging.getLogger("spoofds")
+logger.setLevel(logging.INFO)
 
 
 class BaseModule(pl.LightningModule):
@@ -166,9 +170,11 @@ class SpoofClassificationSystem(BaseModule):
             self.ds_train.name = "train"
 
             val_subsets = [k for k in data_config.keys() if "val" in k]
+
             self.list_ds_val = []
             for name in val_subsets:
                 self.list_ds_val.append(instantiate(data_config[name]))
+                print(len(self.list_ds_val[0]))
                 self.list_ds_val[-1].name = name
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
@@ -209,6 +215,9 @@ class SpoofClassificationSystem(BaseModule):
     def training_step(self, batch_dict, batch_idx, **kwargs):
         batch_size = len(batch_dict["filename"])
 
+        # Freeze the backbone of the transformer
+        self.model.freeze_backbone()
+
         # run forward pass for image tensor
         output = self.forward(batch_dict)
 
@@ -245,6 +254,9 @@ class SpoofClassificationSystem(BaseModule):
 
     @torch.no_grad()
     def validation_step(self, batch_dict, batch_idx, dataloader_idx=0):
+        # Drop into eval mode
+        self.model.eval()
+
         output = self.forward(batch_dict)
 
         # TODO: note that it might be helpful to hide model live-class score prediction inside a special method
