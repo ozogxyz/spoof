@@ -174,19 +174,108 @@ class BaseModule(pl.LightningModule):
         self.log_dict(log_dict, batch_size=batch_size)
 
 
-class SpoofClassificationSystem(BaseModule):
+class SpoofClassificationValidator(BaseModule):
     def _setup(self, hparams):
         super()._setup(hparams)
-        # save helper information
-        self.train_batch_size = getattr(hparams, "train_batch_size")
-        self.eval_batch_size = getattr(hparams, "eval_batch_size", 32)
-
         # instantiate model class
         self.model = (
             instantiate(hparams.model)
             if getattr(hparams, "model", None) is not None
             else None
         )
+
+    def forward(self, input_dict):
+        # TODO: this is an example implementation
+        img_tensor = input_dict["image"]
+        output = self.model.forward(img_tensor)
+        return output
+
+    def on_validation_batch_start(self, batch, batch_idx, dataloader_idx):
+        self.subset = self.trainer.val_dataloaders[dataloader_idx].dataset.name
+        return super().on_validation_batch_start(
+            batch, batch_idx, dataloader_idx
+        )
+
+    @torch.no_grad()
+    def validation_step(self, batch_dict, batch_idx, dataloader_idx=0):
+        output = self.forward(batch_dict)
+
+        # TODO: note that it might be helpful to hide model live-class score prediction inside a special method
+        # instead of estimating it somewhere in training loop separately
+        preds = self.model.get_liveness_score(output)
+        preds = preds.cpu().detach()
+        labels = (batch_dict["label"].cpu() == LABEL_LIVE).long()
+        filename_list = batch_dict["filename"]
+        self.score_list.extend(
+            [
+                {
+                    "name": filename,
+                    "score": preds[idx].item(),
+                    "label": labels[idx].item(),
+                }
+                for idx, filename in enumerate(filename_list)
+            ]
+        )
+
+    def on_validation_end(self) -> None:
+        preds = np.array([elem["score"] for elem in self.score_list])
+        labels = np.array([elem["label"] for elem in self.score_list])
+
+        subset = self.subset
+        th_eval = getattr(self.hparams, "eval_threshold", 0.5)
+        metrics = self.calc_metrics(labels, preds, th_eval)
+        self.print_scores(metrics, subset)
+
+        metrics["scores"] = self.score_list
+        self.dump_scores(metrics, subset)
+
+    @staticmethod
+    def calc_metrics(labels, scores, threshold=0.5):
+        eer_value, th_eer = eer(
+            np.array(labels) == LABEL_LIVE, np.array(scores)
+        )
+        metric_dict = {
+            "m_acc": accuracy(labels, scores, threshold),
+            "m_fcl": fcl(labels, scores, threshold),
+            "m_lcf": lcf(labels, scores, threshold),
+            "m_th_eer": th_eer,
+        }
+        if eer_value > -1e-3:
+            metric_dict["m_eer"] = eer_value
+        return metric_dict
+
+    def dump_scores(self, metrics, subset):
+        """
+        this is an optional step to dump all predicted scores for further outlier analysis
+        can be omitted due to possible overcomplication
+        """
+        latest_ckpt_bn = f"epoch_{self.trainer.current_epoch:03d}"
+        score_file = os.path.join(
+            self.trainer._default_root_dir,
+            "stats",
+            subset,
+            latest_ckpt_bn + ".json",
+        )
+        os.makedirs(os.path.dirname(score_file), exist_ok=True)
+        with open(score_file, "w") as f:
+            json.dump(metrics, f, indent=4)
+
+    def print_scores(self, metrics, subset):
+        log_str = f"{subset:40}: "
+        log_str += " | ".join(
+            [f"{metric}: {score:.3f}" for metric, score in metrics.items()]
+        )
+        self.log_tqdm(log_str)
+        self.log_tqdm("")
+
+
+class SpoofClassificationSystem(SpoofClassificationValidator):
+    def _setup(self, hparams):
+        super()._setup(hparams)
+        # save helper information
+        self.train_batch_size = getattr(hparams, "train_batch_size", None)
+        self.eval_batch_size = getattr(hparams, "eval_batch_size", 32)
+
         # instantiate loss estimation class
         self.loss_func = (
             None
@@ -248,12 +337,6 @@ class SpoofClassificationSystem(BaseModule):
         ]
         return loaders_val
 
-    def forward(self, input_dict):
-        # TODO: this is an example implementation
-        img_tensor = input_dict["image"]
-        output = self.model.forward(img_tensor)
-        return output
-
     def training_step(self, batch_dict, batch_idx, **kwargs):
         batch_size = len(batch_dict["filename"])
 
@@ -290,60 +373,6 @@ class SpoofClassificationSystem(BaseModule):
                 )
         return loss
 
-    def on_validation_batch_start(self, batch, batch_idx, dataloader_idx):
-        self.subset = self.trainer.val_dataloaders[dataloader_idx].dataset.name
-        return super().on_validation_batch_start(
-            batch, batch_idx, dataloader_idx
-        )
-
-    @torch.no_grad()
-    def validation_step(self, batch_dict, batch_idx, dataloader_idx=0):
-        output = self.forward(batch_dict)
-
-        # TODO: note that it might be helpful to hide model live-class score prediction inside a special method
-        # instead of estimating it somewhere in training loop separately
-        preds = self.model.get_liveness_score(output)
-        preds = preds.cpu().detach()
-        labels = (batch_dict["label"].cpu() == LABEL_LIVE).long()
-        filename_list = batch_dict["filename"]
-        self.score_list.extend(
-            [
-                {
-                    "name": filename,
-                    "score": preds[idx].item(),
-                    "label": labels[idx].item(),
-                }
-                for idx, filename in enumerate(filename_list)
-            ]
-        )
-
-    def on_validation_end(self) -> None:
-        preds = np.array([elem["score"] for elem in self.score_list])
-        labels = np.array([elem["label"] for elem in self.score_list])
-
-        subset = self.subset
-        th_eval = getattr(self.hparams, "eval_threshold", 0.5)
-        metrics = self.calc_metrics(labels, preds, th_eval)
-        self.print_scores(metrics, subset)
-
-        metrics["scores"] = self.score_list
-        self.dump_scores(metrics, subset)
-
-    @staticmethod
-    def calc_metrics(labels, scores, threshold=0.5):
-        eer_value, th_eer = eer(
-            np.array(labels) == LABEL_LIVE, np.array(scores)
-        )
-        metric_dict = {
-            "m_acc": accuracy(labels, scores, threshold),
-            "m_fcl": fcl(labels, scores, threshold),
-            "m_lcf": lcf(labels, scores, threshold),
-            "m_th_eer": th_eer,
-        }
-        if eer_value > -1e-3:
-            metric_dict["m_eer"] = eer_value
-        return metric_dict
-
     @torch.no_grad()
     def add_metrics(self, details, allvars):
         """
@@ -357,27 +386,3 @@ class SpoofClassificationSystem(BaseModule):
         details.update(
             {k: torch.Tensor([v]).float() for k, v in metric_dict.items()}
         )
-
-    def dump_scores(self, metrics, subset):
-        """
-        this is an optional step to dump all predicted scores for further outlier analysis
-        can be omitted due to possible overcomplication
-        """
-        latest_ckpt_bn = f"epoch_{self.trainer.current_epoch:03d}"
-        score_file = os.path.join(
-            self.trainer._default_root_dir,
-            "stats",
-            subset,
-            latest_ckpt_bn + ".json",
-        )
-        os.makedirs(os.path.dirname(score_file), exist_ok=True)
-        with open(score_file, "w") as f:
-            json.dump(metrics, f, indent=4)
-
-    def print_scores(self, metrics, subset):
-        log_str = f"{subset:40}: "
-        log_str += " | ".join(
-            [f"{metric}: {score:.3f}" for metric, score in metrics.items()]
-        )
-        self.log_tqdm(log_str)
-        self.log_tqdm("")
