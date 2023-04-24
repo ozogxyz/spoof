@@ -55,7 +55,7 @@ def create_annotations(
     print(f"Found {len(metadata_files)} metadata files")
 
     # Get all the extracted frames
-    extracted_frames = [str(p) for p in Path(extracted_frames_root).rglob("*.png")]
+    extracted_frames = [str(p) for p in Path(extracted_frames_root).rglob("*.jpg")]
     print(f"Found {len(extracted_frames)} extracted frames")
 
     # Create the annotations file
@@ -65,7 +65,7 @@ def create_annotations(
         # Get the corresponding extracted frames
         extracted_frames = [
             str(p)
-            for p in Path(extracted_frames_root).rglob(f"{Path(metadata_file).stem}*.png")
+            for p in Path(extracted_frames_root).rglob(f"{Path(metadata_file).stem}*.jpg")
         ]
 
         # Read the metadata file
@@ -122,7 +122,7 @@ def capture_frames(src: str, dest: str) -> int:
             if not ret:
                 break
 
-            filename = f"{dest}_frame_{cur_frame}.png"
+            filename = f"{dest}_frame_{cur_frame}.jpg"
             if os.path.exists(filename):
                 continue
             cv2.imwrite(filename=filename, img=frame)
@@ -146,15 +146,15 @@ def extract(
     in torchvision ImageFolder format.
     In CASIA, if the video filename ends with 0 it's a spoof, if it ends with
     1 it's real.
-    extract_to/real/xxx.png
-    extract_to/real/xxy.jpeg
-    extract_to/real/xxz.png
+    extract_to/real/xxx.jpg
+    extract_to/real/xxy.jpg
+    extract_to/real/xxz.jpg
     .
     .
     .
     extract_to/spoof/123.jpg
-    extract_to/spoof/nsdf3.png
-    extract_to/spoof/asd932_.png
+    extract_to/spoof/nsdf3.jpg
+    extract_to/spoof/asd932_.jpg
     """
 
     videos = [str(p) for p in Path(root_dir).rglob(f"*{video_ext}")]

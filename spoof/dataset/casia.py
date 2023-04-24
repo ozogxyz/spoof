@@ -39,7 +39,7 @@ class CASIA(Dataset):
         sample = {"image": img_cv2, "meta": meta}
         img_transformed = self._transforms(sample)
 
-        filename = f"{img_path}.png"
+        filename = f"{img_path}.jpg"
 
         sample_dict = {
             "image": img_transformed,
