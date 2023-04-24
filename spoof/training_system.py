@@ -1,34 +1,30 @@
-from argparse import Namespace
-from copy import deepcopy
 import json
-import numpy as np
+import logging
 import os
 import warnings
+from argparse import Namespace
+from copy import deepcopy
 
-from hydra.utils import instantiate
-import pytorch_lightning as pl
+import numpy as np
+import lightning.pytorch as pl
 import torch
+from hydra.utils import instantiate
 from torch import optim
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
-
-from spoof.utils.collector import MovingAverageCollector
-from spoof.utils.metrics import accuracy, eer, fcl, lcf, LABEL_LIVE
-
+from utils.collector import MovingAverageCollector
+from utils.metrics import LABEL_LIVE, accuracy, eer, fcl, lcf
 
 # Lightning prints lots of stuff to STDOUT, might be useful to suppress it
-warnings.filterwarnings(
-    action="ignore", module="pytorch_lightning.utilities.data"
-)
-warnings.filterwarnings(
-    action="ignore", module="pytorch_lightning.trainer.data_loading"
-)
+warnings.filterwarnings(action="ignore", module="pytorch_lightning.utilities.data")
+warnings.filterwarnings(action="ignore", module="pytorch_lightning.trainer.data_loading")
+
+logger = logging.getLogger("spoofds")
+logger.setLevel(logging.INFO)
 
 
 class BaseModule(pl.LightningModule):
-    """
-    A base class with common methods
-    """
+    """A base class with common methods."""
 
     def __init__(self, **hparams):
         super().__init__()
@@ -46,10 +42,8 @@ class BaseModule(pl.LightningModule):
         self._val_vis_freq = getattr(hparams, "val_vis_freq", None)
 
     def on_train_epoch_start(self):
-        """
-        a callback to be called before training epoch run
-        currently it sets up training log/visualization frequency
-        """
+        """a callback to be called before training epoch run currently it sets up training
+        log/visualization frequency."""
         self.subset = "train"
 
         if isinstance(self._train_vis_freq, float):
@@ -57,57 +51,38 @@ class BaseModule(pl.LightningModule):
                 self._train_vis_freq * self.trainer.num_training_batches
             )
         if isinstance(self._log_freq, float):
-            self.log_freq = int(
-                self._log_freq * self.trainer.num_training_batches
-            )
+            self.log_freq = int(self._log_freq * self.trainer.num_training_batches)
 
     def on_validation_epoch_start(self) -> None:
-        """
-        a callback to be called before training epoch run
-        currently it sets up validation visualization frequency (if needed?)
-        """
+        """a callback to be called before training epoch run currently it sets up validation
+        visualization frequency (if needed?)"""
         if isinstance(self._val_vis_freq, float):
-            self.val_vis_freq = int(
-                self._val_vis_freq * self.trainer.num_val_batches[0]
-            )
+            self.val_vis_freq = int(self._val_vis_freq * self.trainer.num_val_batches[0])
         return super().on_validation_epoch_start()
 
     def log_tqdm(self, log_str):
-        """
-        log to stdout, which works fine with TQDM progress bar on most systems
-        """
+        """log to stdout, which works fine with TQDM progress bar on most systems."""
         tqdm.write(f"[{self.__class__.__name__}] {log_str}")
 
     def forward(self, *args, **kwargs):
-        """
-        pass data batch through model and collect its outputs / postprocessing
-
-        """
-        raise NotImplementedError(f"Method forward() is pure virtual")
+        """pass data batch through model and collect its outputs / postprocessing."""
+        raise NotImplementedError("Method forward() is pure virtual")
 
     def training_step(self, batch_dict, batch_idx, **kwargs):
-        """
-        call .forward(batch_dict, **kwargs), then compute loss and save/print logs
-        """
-        raise NotImplementedError(f"Method training_step() is pure virtual")
+        """call .forward(batch_dict, **kwargs), then compute loss and save/print logs."""
+        raise NotImplementedError("Method training_step() is pure virtual")
 
     def validation_step(self, *args, **kwargs):
-        """
-        compute and aggregate validation metrics
-        """
-        raise NotImplementedError(f"Method validation_step() is pure virtual")
+        """compute and aggregate validation metrics."""
+        raise NotImplementedError("Method validation_step() is pure virtual")
 
     def on_validation_start(self) -> None:
-        """
-        clears overall prediction list, might be helpful for visualization purposes
-        prediction list shall be used on validation end to aggregate metrics over all batches
-        """
+        """clears overall prediction list, might be helpful for visualization purposes prediction
+        list shall be used on validation end to aggregate metrics over all batches."""
         self.score_list = []
 
     def configure_optimizers(self):
-        """
-        configure optimizers and schedulers if they are set up in class constructor
-        """
+        """configure optimizers and schedulers if they are set up in class constructor."""
         if getattr(self, "lr_scheduler", None) is not None:
             sched_dict = dict(
                 {"scheduler": self.lr_scheduler}, **self.lr_scheduler_run_params
@@ -117,26 +92,22 @@ class BaseModule(pl.LightningModule):
         return [self.optimizer]
 
     def on_save_checkpoint(self, checkpoint) -> None:
-        """
-        save model and loss configs to checkpoint for reproducibility
-        """
+        """save model and loss configs to checkpoint for reproducibility."""
         if hasattr(self.hparams, "model"):
             checkpoint["model_config"] = self.hparams.model
         else:
             self.log_tqdm(
-                f"Can't save model config, because attribute 'self.hparams.model' not found"
+                "Can't save model config, because attribute 'self.hparams.model' not found"
             )
         if hasattr(self.hparams, "loss"):
             checkpoint["loss_config"] = self.hparams.loss
         else:
             self.log_tqdm(
-                f"Can't save loss config, because attribute 'self.hparams.loss' not found"
+                "Can't save loss config, because attribute 'self.hparams.loss' not found"
             )
 
     def log_performance(self, details, batch_size=None):
-        """
-        some custom logging which I use, but feel free to modify it however you like
-        """
+        """some custom logging which I use, but feel free to modify it however you like."""
         # aggregate loss and metrics over training epoch
         for k, v in details.items():
             val = v.detach().cpu().mean().item()
@@ -145,31 +116,22 @@ class BaseModule(pl.LightningModule):
 
         loss_details = {
             nam: meter.value
-            for nam, meter in sorted(
-                self.collector._dict.items(), key=lambda x: x[0]
-            )
+            for nam, meter in sorted(self.collector._dict.items(), key=lambda x: x[0])
         }
 
         if self.log_freq > 0 and self.global_step % self.log_freq == 0:
             # log to console
-            log_str = (
-                f"e:{self.current_epoch+1:03d} b: {self.global_step:06d} || "
-            )
-            log_str += " | ".join(
-                [f"{k}: {v:.3f}" for k, v in loss_details.items()]
-            )
+            log_str = f"e:{self.current_epoch+1:03d} b: {self.global_step:06d} || "
+            log_str += " | ".join([f"{k}: {v:.3f}" for k, v in loss_details.items()])
             self.log_tqdm(log_str)
 
             # log to tensorboard
             for k, v in details.items():
-                self.logger.experiment.add_scalar(
-                    f"{k}", v.mean(), self.global_step
-                )
+                self.logger.experiment.add_scalar(f"{k}", v.mean(), self.global_step)
 
         # log with PL logger
         log_dict = {
-            f"{k}": v
-            for k, v in sorted(loss_details.items(), key=lambda x: x[0])
+            f"{k}": v for k, v in sorted(loss_details.items(), key=lambda x: x[0])
         }
         self.log_dict(log_dict, batch_size=batch_size)
 
@@ -189,9 +151,7 @@ class SpoofClassificationSystem(BaseModule):
         )
         # instantiate loss estimation class
         self.loss_func = (
-            None
-            if getattr(hparams, "loss", None) is None
-            else instantiate(hparams.loss)
+            None if getattr(hparams, "loss", None) is None else instantiate(hparams.loss)
         )
 
         # TODO: let's hardcode Adam optimizer for simplicity and pass only learning rate and weight decay?
@@ -210,15 +170,15 @@ class SpoofClassificationSystem(BaseModule):
             self.ds_train.name = "train"
 
             val_subsets = [k for k in data_config.keys() if "val" in k]
+
             self.list_ds_val = []
             for name in val_subsets:
                 self.list_ds_val.append(instantiate(data_config[name]))
+                print(len(self.list_ds_val[0]))
                 self.list_ds_val[-1].name = name
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
-        """
-        performs data loading before training starts
-        """
+        """performs data loading before training starts."""
         is_cuda = "cuda" in self.device.type
         num_workers = 0 if os.name == "nt" else 4
         loader_train = DataLoader(
@@ -230,11 +190,10 @@ class SpoofClassificationSystem(BaseModule):
         )
         return loader_train
 
+    # TODO get val from test
     def val_dataloader(self):
-        """
-        performs data loading before validation starts
-        returns a list of data loaders for multi-dataset validation
-        """
+        """performs data loading before validation starts returns a list of data loaders for multi-
+        dataset validation."""
         is_cuda = "cuda" in self.device.type
         num_workers = 0 if os.name == "nt" else 4
         loaders_val = [
@@ -254,8 +213,15 @@ class SpoofClassificationSystem(BaseModule):
         output = self.model.forward(img_tensor)
         return output
 
+    def on_train_epoch_start(self, batch, batch_idx):
+        self.model.freeze_backbone()
+
     def training_step(self, batch_dict, batch_idx, **kwargs):
         batch_size = len(batch_dict["filename"])
+        print(batch_dict["filename"])
+
+        # Freeze the backbone of the transformer
+        self.model.freeze_backbone()
 
         # run forward pass for image tensor
         output = self.forward(batch_dict)
@@ -280,24 +246,22 @@ class SpoofClassificationSystem(BaseModule):
         # log metrics
         self.add_metrics(details, allvars)
         self.log_performance(details, batch_size)
-        if (
-            self.train_vis_freq > 0
-            and self.global_step % self.train_vis_freq == 1
-        ):
+        if self.train_vis_freq > 0 and self.global_step % self.train_vis_freq == 1:
             if hasattr(self.model, "add_tensorboard_logs"):
                 self.model.add_tensorboard_logs(
                     self.logger.experiment, int(self.global_step), allvars
                 )
         return loss
 
-    def on_validation_batch_start(self, batch, batch_idx, dataloader_idx):
+    def on_validation_batch_start(self, batch, batch_idx, dataloader_idx=0):
         self.subset = self.trainer.val_dataloaders[dataloader_idx].dataset.name
-        return super().on_validation_batch_start(
-            batch, batch_idx, dataloader_idx
-        )
+        return super().on_validation_batch_start(batch, batch_idx, dataloader_idx)
 
     @torch.no_grad()
     def validation_step(self, batch_dict, batch_idx, dataloader_idx=0):
+        # Drop into eval mode
+        self.model.eval()
+
         output = self.forward(batch_dict)
 
         # TODO: note that it might be helpful to hide model live-class score prediction inside a special method
@@ -331,9 +295,7 @@ class SpoofClassificationSystem(BaseModule):
 
     @staticmethod
     def calc_metrics(labels, scores, threshold=0.5):
-        eer_value, th_eer = eer(
-            np.array(labels) == LABEL_LIVE, np.array(scores)
-        )
+        eer_value, th_eer = eer(np.array(labels) == LABEL_LIVE, np.array(scores))
         metric_dict = {
             "m_acc": accuracy(labels, scores, threshold),
             "m_fcl": fcl(labels, scores, threshold),
@@ -346,23 +308,17 @@ class SpoofClassificationSystem(BaseModule):
 
     @torch.no_grad()
     def add_metrics(self, details, allvars):
-        """
-        adds metrics to dict with batch statistics (loss etc.)
-        """
+        """adds metrics to dict with batch statistics (loss etc.)"""
         labels = allvars["label"].cpu().numpy().ravel() == LABEL_LIVE
         scores_tensor = self.model.get_liveness_score(allvars)
         scores = scores_tensor.cpu().numpy().ravel()
 
         metric_dict = self.calc_metrics(labels, scores)
-        details.update(
-            {k: torch.Tensor([v]).float() for k, v in metric_dict.items()}
-        )
+        details.update({k: torch.Tensor([v]).float() for k, v in metric_dict.items()})
 
     def dump_scores(self, metrics, subset):
-        """
-        this is an optional step to dump all predicted scores for further outlier analysis
-        can be omitted due to possible overcomplication
-        """
+        """this is an optional step to dump all predicted scores for further outlier analysis can
+        be omitted due to possible overcomplication."""
         latest_ckpt_bn = f"epoch_{self.trainer.current_epoch:03d}"
         score_file = os.path.join(
             self.trainer._default_root_dir,

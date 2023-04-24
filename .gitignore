@@ -7,8 +7,8 @@
 data/
 **/data/
 **/*.pth
-models/
-tests
+tests/
+logs/**
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

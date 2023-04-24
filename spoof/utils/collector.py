@@ -2,9 +2,7 @@ import json
 
 
 class AverageMeter(object):
-    """
-    Computes and stores the average and current value
-    """
+    """Computes and stores the average and current value."""
 
     def __init__(self, name="", full=False):
         self.name = name

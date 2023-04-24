@@ -1,8 +1,9 @@
-import json
 import csv
+import json
 import logging
 import os
 from pathlib import Path
+
 import cv2
 
 
@@ -49,17 +50,12 @@ def create_annotations(
         annotations: List of tuples containing the image path, face rectangle
             and face landmarks.
     """
-    # Skip if annotations file already exist and not overwriting
-    if os.path.exists(annotations_path):
-        print(f"File {annotations_path} already exists. Skipping...")
-        return
-
     # Get all the metadata files
     metadata_files = [str(p) for p in Path(metadata_root).rglob("*json")]
     print(f"Found {len(metadata_files)} metadata files")
 
     # Get all the extracted frames
-    extracted_frames = [str(p) for p in Path(extracted_frames_root).rglob("*.jpg")]
+    extracted_frames = [str(p) for p in Path(extracted_frames_root).rglob("*.png")]
     print(f"Found {len(extracted_frames)} extracted frames")
 
     # Create the annotations file
@@ -69,24 +65,24 @@ def create_annotations(
         # Get the corresponding extracted frames
         extracted_frames = [
             str(p)
-            for p in Path(extracted_frames_root).rglob(f"{Path(metadata_file).stem}*.jpg")
+            for p in Path(extracted_frames_root).rglob(f"{Path(metadata_file).stem}*.png")
         ]
 
         # Read the metadata file
-        with open(metadata_file, "r") as f:
+        with open(metadata_file) as f:
             metadata = json.load(f)
 
         # Get the face rectangle and landmarks using the frame number as key
         face_rectangles = {int(k): v["face_rect"] for k, v in metadata.items()}
-        face_landmarks = {int(k): v["lm7pt"] for k, v in metadata.items()}
+        face_landmarks = {int(k): v["face_landmark"] for k, v in metadata.items()}
 
         # Rename face_rect to face_rectangle
         for k, v in metadata.items():
             v["face_rectangle"] = v.pop("face_rect")
 
-        # Rename lm7pt to landmarks
+        # Rename face_landmark to landmarks
         for k, v in metadata.items():
-            v["landmarks"] = v.pop("lm7pt")
+            v["landmarks"] = v.pop("face_landmark")
 
         # Create the annotations
         for frame in extracted_frames:
@@ -126,9 +122,8 @@ def capture_frames(src: str, dest: str) -> int:
             if not ret:
                 break
 
-            filename = f"{dest}_frame_{cur_frame}.jpg"
+            filename = f"{dest}_frame_{cur_frame}.png"
             if os.path.exists(filename):
-                print(f"File {filename} already exists. Skipping...")
                 continue
             cv2.imwrite(filename=filename, img=frame)
             cur_frame += 1
@@ -187,20 +182,3 @@ def extract(
     print(f"Extracted {total_frame_count} frames")
     print("Finished extracting frames.")
     return total_frame_count
-
-
-if __name__ == "__main__":
-    tr_meta = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/train/meta/train"
-    tr_extr = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/train"
-    tr_an = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/train/train.csv"
-    tr_vid = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/train/data/train"
-
-    ts_vid = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/test/data/test"
-    ts_meta = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/test/meta/test"
-    ts_extr = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/test"
-    ts_an = "/Users/motorbreath/mipt/thesis/code/spoof/data/casia/images/test/test.csv"
-
-    extract(tr_vid, tr_extr)
-    extract(ts_vid, ts_extr)
-    create_annotations(tr_meta, tr_extr, tr_an)
-    create_annotations(ts_meta, ts_extr, ts_an)
