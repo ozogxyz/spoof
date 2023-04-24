@@ -16,8 +16,8 @@ from utils.collector import MovingAverageCollector
 from utils.metrics import LABEL_LIVE, accuracy, eer, fcl, lcf
 
 # Lightning prints lots of stuff to STDOUT, might be useful to suppress it
-# warnings.filterwarnings(action="ignore", module="pytorch_lightning.utilities.data")
-# warnings.filterwarnings(action="ignore", module="pytorch_lightning.trainer.data_loading")
+warnings.filterwarnings(action="ignore", module="pytorch_lightning.utilities.data")
+warnings.filterwarnings(action="ignore", module="pytorch_lightning.trainer.data_loading")
 
 logger = logging.getLogger("spoofds")
 logger.setLevel(logging.INFO)
@@ -190,6 +190,7 @@ class SpoofClassificationSystem(BaseModule):
         )
         return loader_train
 
+    # TODO get val from test
     def val_dataloader(self):
         """performs data loading before validation starts returns a list of data loaders for multi-
         dataset validation."""
@@ -212,8 +213,12 @@ class SpoofClassificationSystem(BaseModule):
         output = self.model.forward(img_tensor)
         return output
 
+    def on_train_epoch_start(self, batch, batch_idx):
+        self.model.freeze_backbone()
+
     def training_step(self, batch_dict, batch_idx, **kwargs):
         batch_size = len(batch_dict["filename"])
+        print(batch_dict["filename"])
 
         # Freeze the backbone of the transformer
         self.model.freeze_backbone()

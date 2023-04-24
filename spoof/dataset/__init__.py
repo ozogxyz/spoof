@@ -1,3 +1,1 @@
-from .dummy import DummyDataset
-
-from .casia import CasiaDataset
+from .casia import CASIA
