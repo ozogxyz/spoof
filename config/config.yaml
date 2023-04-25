@@ -36,7 +36,7 @@ training_system:
 trainer_params:
   max_epochs: 1
   fast_dev_run: 0
-  precision: 32 # select 16 for speedup
+  precision: 16 # select 16 for speedup
 
 test:
   _target_: spoof.dataset.CASIA

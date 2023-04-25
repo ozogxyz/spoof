@@ -17,8 +17,12 @@ from spoof.utils.metrics import accuracy, eer, fcl, lcf, LABEL_LIVE
 
 
 # Lightning prints lots of stuff to STDOUT, might be useful to suppress it
-warnings.filterwarnings(action="ignore", module="pytorch_lightning.utilities.data")
-warnings.filterwarnings(action="ignore", module="pytorch_lightning.trainer.data_loading")
+warnings.filterwarnings(
+    action="ignore", module="pytorch_lightning.utilities.data"
+)
+warnings.filterwarnings(
+    action="ignore", module="pytorch_lightning.trainer.data_loading"
+)
 
 
 class BaseModule(pl.LightningModule):
@@ -53,7 +57,9 @@ class BaseModule(pl.LightningModule):
                 self._train_vis_freq * self.trainer.num_training_batches
             )
         if isinstance(self._log_freq, float):
-            self.log_freq = int(self._log_freq * self.trainer.num_training_batches)
+            self.log_freq = int(
+                self._log_freq * self.trainer.num_training_batches
+            )
 
         # Freeze here?
         model.freeze_backbone()
@@ -64,7 +70,9 @@ class BaseModule(pl.LightningModule):
         currently it sets up validation visualization frequency (if needed?)
         """
         if isinstance(self._val_vis_freq, float):
-            self.val_vis_freq = int(self._val_vis_freq * self.trainer.num_val_batches[0])
+            self.val_vis_freq = int(
+                self._val_vis_freq * self.trainer.num_val_batches[0]
+            )
         return super().on_validation_epoch_start()
 
     def log_tqdm(self, log_str):
@@ -140,22 +148,31 @@ class BaseModule(pl.LightningModule):
 
         loss_details = {
             nam: meter.value
-            for nam, meter in sorted(self.collector._dict.items(), key=lambda x: x[0])
+            for nam, meter in sorted(
+                self.collector._dict.items(), key=lambda x: x[0]
+            )
         }
 
         if self.log_freq > 0 and self.global_step % self.log_freq == 0:
             # log to console
-            log_str = f"e:{self.current_epoch+1:03d} b: {self.global_step:06d} || "
-            log_str += " | ".join([f"{k}: {v:.3f}" for k, v in loss_details.items()])
+            log_str = (
+                f"e:{self.current_epoch+1:03d} b: {self.global_step:06d} || "
+            )
+            log_str += " | ".join(
+                [f"{k}: {v:.3f}" for k, v in loss_details.items()]
+            )
             self.log_tqdm(log_str)
 
             # log to tensorboard
             for k, v in details.items():
-                self.logger.experiment.add_scalar(f"{k}", v.mean(), self.global_step)
+                self.logger.experiment.add_scalar(
+                    f"{k}", v.mean(), self.global_step
+                )
 
         # log with PL logger
         log_dict = {
-            f"{k}": v for k, v in sorted(loss_details.items(), key=lambda x: x[0])
+            f"{k}": v
+            for k, v in sorted(loss_details.items(), key=lambda x: x[0])
         }
         self.log_dict(log_dict, batch_size=batch_size)
 
@@ -178,7 +195,9 @@ class SpoofClassificationValidator(BaseModule):
 
     def on_validation_batch_start(self, batch, batch_idx, dataloader_idx):
         self.subset = self.trainer.val_dataloaders[dataloader_idx].dataset.name
-        return super().on_validation_batch_start(batch, batch_idx, dataloader_idx)
+        return super().on_validation_batch_start(
+            batch, batch_idx, dataloader_idx
+        )
 
     @torch.no_grad()
     def validation_step(self, batch_dict, batch_idx, dataloader_idx=0):
@@ -215,7 +234,9 @@ class SpoofClassificationValidator(BaseModule):
 
     @staticmethod
     def calc_metrics(labels, scores, threshold=0.5):
-        eer_value, th_eer = eer(np.array(labels) == LABEL_LIVE, np.array(scores))
+        eer_value, th_eer = eer(
+            np.array(labels) == LABEL_LIVE, np.array(scores)
+        )
         metric_dict = {
             "m_acc": accuracy(labels, scores, threshold),
             "m_fcl": fcl(labels, scores, threshold),
@@ -260,7 +281,9 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
 
         # instantiate loss estimation class
         self.loss_func = (
-            None if getattr(hparams, "loss", None) is None else instantiate(hparams.loss)
+            None
+            if getattr(hparams, "loss", None) is None
+            else instantiate(hparams.loss)
         )
 
         # TODO: let's hardcode Adam optimizer for simplicity and pass only learning rate and weight decay?
@@ -317,6 +340,9 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
         ]
         return loaders_val
 
+    def on_train_epoch_start(self):
+        return super().on_train_epoch_start(self.model)
+
     def training_step(self, batch_dict, batch_idx, **kwargs):
         batch_size = len(batch_dict["filename"])
 
@@ -343,7 +369,10 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
         # log metrics
         self.add_metrics(details, allvars)
         self.log_performance(details, batch_size)
-        if self.train_vis_freq > 0 and self.global_step % self.train_vis_freq == 1:
+        if (
+            self.train_vis_freq > 0
+            and self.global_step % self.train_vis_freq == 1
+        ):
             if hasattr(self.model, "add_tensorboard_logs"):
                 self.model.add_tensorboard_logs(
                     self.logger.experiment, int(self.global_step), allvars
@@ -360,4 +389,6 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
         scores = scores_tensor.cpu().numpy().ravel()
 
         metric_dict = self.calc_metrics(labels, scores)
-        details.update({k: torch.Tensor([v]).float() for k, v in metric_dict.items()})
+        details.update(
+            {k: torch.Tensor([v]).float() for k, v in metric_dict.items()}
+        )
