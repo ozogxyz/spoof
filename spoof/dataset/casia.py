@@ -31,7 +31,9 @@ class CASIA(Dataset):
 
         # Transforms
         face_rect = self.annotations.iloc[idx, 1:5].values.astype(int)
-        face_landmark = self.annotations.iloc[idx, 5:-1].values.astype(int).reshape(-1, 2)
+        face_landmark = (
+            self.annotations.iloc[idx, 5:-1].values.astype(int).reshape(-1, 2)
+        )
         meta = {"face_rect": face_rect, "face_landmark": face_landmark}
         sample = {"image": img_cv2, "meta": meta}
 
@@ -39,12 +41,10 @@ class CASIA(Dataset):
         transformed_sample = self._transform(sample)
         transformed_img = self._transform(sample)["image"].transpose((2, 0, 1))
 
-        filename = f"{img_path}.jpg"
-
         sample_dict = {
             "image": transformed_img,
             "label": label,
-            "filename": filename,
+            "filename": img_path,
         }
 
         return sample_dict
