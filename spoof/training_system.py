@@ -41,7 +41,7 @@ class BaseModule(pl.LightningModule):
         self._train_vis_freq = getattr(hparams, "train_vis_freq", None)
         self._val_vis_freq = getattr(hparams, "val_vis_freq", None)
 
-    def on_train_epoch_start(self):
+    def on_train_epoch_start(self, model):
         """a callback to be called before training epoch run currently it sets up training
         log/visualization frequency."""
         self.subset = "train"
@@ -53,7 +53,8 @@ class BaseModule(pl.LightningModule):
         if isinstance(self._log_freq, float):
             self.log_freq = int(self._log_freq * self.trainer.num_training_batches)
 
-        # Freeze the backbone here
+        # Freeze here?
+        model.freeze_backbone()
 
     def on_validation_epoch_start(self) -> None:
         """a callback to be called before training epoch run currently it sets up validation
@@ -213,6 +214,9 @@ class SpoofClassificationSystem(BaseModule):
         img_tensor = input_dict["image"]
         output = self.model.forward(img_tensor)
         return output
+
+    def on_train_epoch_start(self):
+        return super().on_train_epoch_start(self.model)
 
     def training_step(self, batch_dict, batch_idx, **kwargs):
         batch_size = len(batch_dict["filename"])
