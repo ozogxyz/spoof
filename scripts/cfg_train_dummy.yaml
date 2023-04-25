@@ -7,13 +7,13 @@ training_system:
   lr: 0.001
   weight_decay: 0.00001
 
-  train_batch_size: 16
-  eval_batch_size: 8
+  train_batch_size: 64
+  eval_batch_size: 32
 
   model:
-    _target_: spoof.model.ViT
-    dim_embedding: 768
+    _target_: spoof.model.DummyModel
     num_classes: 1
+    dim_embedding: 32
 
   loss:
     _target_: spoof.loss.MultiLoss
@@ -26,18 +26,15 @@ training_system:
 
   data:
     train:
-      _target_: spoof.dataset.CASIA
-      annotations_file: ${oc.env:HOME}/spoof/data/casia/images/train/train.csv
-
+      _target_: spoof.dataset.DummyDataset
+      num_samples: 1024
+      image_size: 128
     val_base:
-      _target_: spoof.dataset.CASIA
-      annotations_file: ${oc.env:HOME}/spoof/data/casia/images/val/val.csv
+      _target_: spoof.dataset.DummyDataset
+      num_samples: 128
+      image_size: 128
 
 trainer_params:
   max_epochs: 1
   fast_dev_run: 0
   precision: 32 # select 16 for speedup
-
-test:
-  _target_: spoof.dataset.CASIA
-  annotations_file: ${oc.env:HOME}/spoof/data/casia/images/test/test.csv

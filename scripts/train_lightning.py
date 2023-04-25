@@ -25,7 +25,9 @@ def parse_args():
     parser.add_argument(
         "-b", "--batch-size", default=64, type=int, help="train batch size"
     )
-    parser.add_argument("-e", "--epochs", default=1, type=int, help="train epoch count")
+    parser.add_argument(
+        "-e", "--epochs", default=1, type=int, help="train epoch count"
+    )
     parser.add_argument(
         "-t",
         "--train_dir",
@@ -62,11 +64,15 @@ def test_trainval_loop(args):
 
     config_training_system = config_training["training_system"]
     # set hyper parameters
-    config_training_system["trainer_params"] = config_training["trainer_params"]
+    config_training_system["trainer_params"] = config_training[
+        "trainer_params"
+    ]
     config_training_system["train_batch_size"] = args.batch_size
 
     # instantiate PL training system, containing loss function, model, data and training/validation loops
-    training_system = hydra.utils.instantiate(config_training_system, _recursive_=False)
+    training_system = hydra.utils.instantiate(
+        config_training_system, _recursive_=False
+    )
 
     # prepare params for trainer class
     params_trainer = config_training_system["trainer_params"]
@@ -77,7 +83,9 @@ def test_trainval_loop(args):
         params_trainer["accelerator"] = "gpu"
 
     # training callbacks, e.g. model checkpoint saving or TQDM progress bar
-    logger.info(f"default checkpoint dir: {params_trainer['default_root_dir']}")
+    logger.info(
+        f"default checkpoint dir: {params_trainer['default_root_dir']}"
+    )
     checkpoint_callback = ModelCheckpoint(
         dirpath=params_trainer["default_root_dir"],
         filename="ep{epoch:03d}_loss{train_loss:.2f}_acc{m_acc:.3f}_eer{m_eer:.3f}",
