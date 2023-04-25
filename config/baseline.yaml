@@ -1,0 +1,43 @@
+training_system:
+  _target_: spoof.training_system.SpoofClassificationSystem
+  log_freq: 0.1
+  train_vis_freq: 0.2
+  val_vis_freq: 0.2
+
+  lr: 0.001
+  weight_decay: 0.00001
+
+  train_batch_size: 16
+  eval_batch_size: 8
+
+  model:
+    _target_: spoof.model.DummyModel
+    dim_embedding: 768
+    num_classes: 1
+
+  loss:
+    _target_: spoof.loss.MultiLoss
+    weighted_loss_list:
+      - 1.0
+      - _target_: spoof.loss.ClassifierBinary
+        name: bce
+        tag_pred: out_logit
+        tag_gt: label
+
+  data:
+    train:
+      _target_: spoof.dataset.CASIA
+      annotations_file: ${oc.env:HOME}/spoof/data/casia/images/train/train.csv
+
+    val_base:
+      _target_: spoof.dataset.CASIA
+      annotations_file: ${oc.env:HOME}/spoof/data/casia/images/val/val.csv
+
+trainer_params:
+  max_epochs: 1
+  fast_dev_run: 0
+  precision: 16 # select 16 for speedup
+
+test:
+  _target_: spoof.dataset.CASIA
+  annotations_file: ${oc.env:HOME}/spoof/data/casia/images/test/test.csv
