@@ -8,9 +8,6 @@ import hydra
 import pytorch_lightning as pl
 import torch
 
-# sys.path.append(str(Path(__file__).resolve().parent.parent))
-# print(str(Path(__file__).resolve().parent.parent))
-# TODO: adjust pip installation script so this imports work properly
 from spoof.dataset import threaded_loader
 from spoof.training_system import SpoofClassificationValidator
 
@@ -21,10 +18,9 @@ logger.setLevel(logging.INFO)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Validation/testing script")
-    # MODEL WEIGHTS
-    parser.add_argument("--ckpt", type=str, required=True)
-
-    # EVALUATION
+    parser.add_argument(
+        "--ckpt", type=str, required=True, help="path to model checkpoint"
+    )
     parser.add_argument(
         "--config-data", nargs="+", type=str, help="path to data config"
     )
@@ -93,7 +89,6 @@ def validate(args):
     params_runner = {
         "default_root_dir": output_dir,
         "gpus": [args.device] if args.device >= 0 else -1,
-        "progress_bar_refresh_rate": 0,
         "log_every_n_steps": 10,
     }
     params = {
