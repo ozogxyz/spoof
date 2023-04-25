@@ -31,13 +31,18 @@ class CASIA(Dataset):
 
         # Transforms
         face_rect = self.annotations.iloc[idx, 1:5].values.astype(int)
-        face_landmark = self.annotations.iloc[idx, 5:-1].values.astype(int).reshape(-1, 2)
+        face_landmark = (
+            self.annotations.iloc[idx, 5:-1].values.astype(int).reshape(-1, 2)
+        )
         meta = {"face_rect": face_rect, "face_landmark": face_landmark}
         sample = {"image": img_cv2, "meta": meta}
 
-        # Transform and reshape to (C, H, W)
-        transformed_sample = self._transform(sample)
+        # Transform and reshape to (C, H, W), to tensor
         transformed_img = self._transform(sample)["image"].transpose((2, 0, 1))
+        transformed_img = torch.tensor(transformed_img, dtype=torch.float32)
+
+        # Clamp img to [0, 1]
+        transformed_img = torch.clamp(transformed_img, 0, 1)
 
         filename = f"{img_path}.jpg"
 

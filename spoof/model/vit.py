@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from timm import create_model
+from torchvision.models import vit_b_16, ViT_B_16_Weights
 
 
 class ViT(nn.Module):
@@ -15,14 +15,20 @@ class ViT(nn.Module):
             `n_classes`: Number of classes in the classification task.
         """
         super().__init__()
-        # better keep track of model normalization parameters
-        half_ones = torch.Tensor([0.5])[None, None, None, :]
-        self.register_buffer("input_mean", half_ones)
-        self.register_buffer("input_std", half_ones)
+        # better keep track of model normalization parameters, normalize by channel
+        input_mean = torch.Tensor([0.485, 0.456, 0.406])[None, :, None, None]
+        input_std = torch.Tensor([0.229, 0.224, 0.225])[None, :, None, None]
+        self.register_buffer("input_mean", input_mean)
+        self.register_buffer("input_std", input_std)
 
         # Load pre-trained ViT
-        self.extractor = create_model("vit_base_patch16_224", pretrained=True)
-        self.extractor.head = nn.Identity()
+        self.extractor = vit_b_16(
+            weights=ViT_B_16_Weights.DEFAULT,
+            progress=True,
+        )
+
+        # Assign nn.Identity() to the head to be able to freeze the backbone
+        self.extractor.heads = nn.Identity()
 
         # Replace the last layer of the transformer with custom MLP
         self.classifier = nn.Linear(dim_embedding, num_classes)

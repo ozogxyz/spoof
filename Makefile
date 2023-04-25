@@ -21,3 +21,12 @@ test:
 
 test-full:
 	pytest
+
+train-base:
+	python spoof/train.py --device=1 --cfg-training=config/baseline.yaml
+
+train:
+	python spoof/train.py --device=1 --cfg-training=config/train.yaml
+
+validate:
+	 python spoof/validate.py --device=1 --config-data=config/validate.yaml --ckpt=logs/ep003_loss0.16_acc0.910_eer0.026.ckpt
