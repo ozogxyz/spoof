@@ -62,7 +62,8 @@ class BaseModule(pl.LightningModule):
             )
 
         # Freeze here?
-        model.freeze_backbone()
+        if hasattr(model, "freeze_backbone"):
+            model.freeze_backbone()
 
     def on_validation_epoch_start(self) -> None:
         """
