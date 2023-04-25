@@ -6,7 +6,7 @@ from argparse import Namespace
 from copy import deepcopy
 
 import numpy as np
-import lightning.pytorch as pl
+import pytorch_lightning as pl
 import torch
 from hydra.utils import instantiate
 from torch import optim
@@ -52,6 +52,8 @@ class BaseModule(pl.LightningModule):
             )
         if isinstance(self._log_freq, float):
             self.log_freq = int(self._log_freq * self.trainer.num_training_batches)
+
+        # Freeze the backbone here
 
     def on_validation_epoch_start(self) -> None:
         """a callback to be called before training epoch run currently it sets up validation
@@ -174,7 +176,6 @@ class SpoofClassificationSystem(BaseModule):
             self.list_ds_val = []
             for name in val_subsets:
                 self.list_ds_val.append(instantiate(data_config[name]))
-                print(len(self.list_ds_val[0]))
                 self.list_ds_val[-1].name = name
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
@@ -213,15 +214,8 @@ class SpoofClassificationSystem(BaseModule):
         output = self.model.forward(img_tensor)
         return output
 
-    def on_train_epoch_start(self, batch, batch_idx):
-        self.model.freeze_backbone()
-
     def training_step(self, batch_dict, batch_idx, **kwargs):
         batch_size = len(batch_dict["filename"])
-        print(batch_dict["filename"])
-
-        # Freeze the backbone of the transformer
-        self.model.freeze_backbone()
 
         # run forward pass for image tensor
         output = self.forward(batch_dict)

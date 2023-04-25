@@ -3,15 +3,10 @@ import logging
 import sys
 
 import hydra
-import lightning as pl
+import pytorch_lightning as pl
 import torch
 import yaml
-from lightning.pytorch.callbacks import (
-    ModelCheckpoint,
-    EarlyStopping,
-    RichModelSummary,
-    RichProgressBar,
-)
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 sys.path.append("../spoof")
 logger = logging.getLogger(__name__)
@@ -28,7 +23,7 @@ def parse_args():
         help="Training config file",
     )
     parser.add_argument(
-        "-b", "--batch-size", default=64, type=int, help="train batch size"
+        "-b", "--batch-size", default=16, type=int, help="train batch size"
     )
     parser.add_argument("-e", "--epochs", default=1, type=int, help="train epoch count")
     parser.add_argument(
@@ -90,24 +85,16 @@ def train(args: argparse.Namespace):
         save_weights_only=False,
         auto_insert_metric_name=False,
     )
-    progress_bar = RichProgressBar()
-    model_summary = RichModelSummary()
-    early_stopping = EarlyStopping(
-        monitor="m_eer",
-        min_delta=0.0,
-        patience=10,
-        verbose=True,
-        mode="min",
-    )
-    callbacks = [checkpoint_callback, progress_bar, model_summary, early_stopping]
+
+    callbacks = [checkpoint_callback]
 
     # instantiate trainer class, responsible for data loading, compute precision, GPU management, etc.
     trainer = pl.Trainer(
         logger=True,
         callbacks=callbacks,
-        # replace_sampler_ddp=False,
+        replace_sampler_ddp=False,
         benchmark=torch.backends.cudnn.benchmark,
-        # enable_progress_bar=False,
+        enable_progress_bar=False,
         **params_trainer,
     )
 

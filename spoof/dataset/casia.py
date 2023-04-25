@@ -1,12 +1,10 @@
 import logging
-import sys
 
 import cv2
 import pandas as pd
 from torch.utils.data import Dataset
-
-sys.path.append("../spoof")
 from torchvision.transforms import Compose
+import torch
 
 from spoof.utils.transforms import FaceRegionRCXT, MetaAddLMSquare
 
@@ -28,7 +26,6 @@ class CASIA(Dataset):
         img_path = self.annotations.iloc[idx, 0]
         img_cv2 = cv2.imread(img_path)
         img_cv2 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
-        # img_tensor = torch.from_numpy(img_cv2).permute(2, 0, 1).float()
 
         label = self.annotations.iloc[idx, -1]
 
@@ -37,19 +34,22 @@ class CASIA(Dataset):
         face_landmark = self.annotations.iloc[idx, 5:-1].values.astype(int).reshape(-1, 2)
         meta = {"face_rect": face_rect, "face_landmark": face_landmark}
         sample = {"image": img_cv2, "meta": meta}
-        img_transformed = self._transforms(sample)
+
+        # Transform and reshape to (C, H, W)
+        transformed_sample = self._transform(sample)
+        transformed_img = self._transform(sample)["image"].transpose((2, 0, 1))
 
         filename = f"{img_path}.jpg"
 
         sample_dict = {
-            "image": img_transformed,
+            "image": transformed_img,
             "label": label,
             "filename": filename,
         }
 
         return sample_dict
 
-    def _transforms(self, sample):
+    def _transform(self, sample):
         tr = Compose(
             [
                 MetaAddLMSquare(),
