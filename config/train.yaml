@@ -29,6 +29,10 @@ training_system:
       _target_: spoof.dataset.CASIA
       annotations_file: ${oc.env:HOME}/spoof/data/casia/images/train/train.csv
 
+    val_base:
+      _target_: spoof.dataset.CASIA
+      annotations_file: ${oc.env:HOME}/spoof/data/casia/images/val/val.csv
+
 trainer_params:
   max_epochs: 1
   fast_dev_run: 0
