@@ -14,7 +14,9 @@ def accuracy(labels, predicted, th=0.5):
 
 
 def fcl(labels, scores, th=0.5):
-    """Fake Called Live OR APCER (Attack Presentation Classification Error Rate)"""
+    """
+    Fake Called Live OR APCER (Attack Presentation Classification Error Rate)
+    """
     labels = np.int32(labels)
     predicted = np.int32(np.array(scores) > th)
     n_fake = (labels != LABEL_LIVE).sum()
@@ -23,7 +25,9 @@ def fcl(labels, scores, th=0.5):
 
 
 def lcf(labels, scores, th=0.5):
-    """Live Called Fake OR BPCER (Bona-fide Presentation Classification Acceptance Rate )"""
+    """
+    Live Called Fake OR BPCER (Bona-fide Presentation Classification Acceptance Rate )
+    """
     labels = np.int32(labels)
     predicted = np.int32(np.array(scores) > th)
     n_live = (labels == LABEL_LIVE).sum()
@@ -32,7 +36,9 @@ def lcf(labels, scores, th=0.5):
 
 
 def eer(labels, scores):
-    """Equal Error Rate with the corresponding threshold."""
+    """
+    Equal Error Rate with the corresponding threshold
+    """
     labels = np.int32(labels)
     scores = np.float32(scores)
     fake_preds = scores[labels == LABEL_FAKE]

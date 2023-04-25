@@ -66,7 +66,7 @@ def test_trainval_loop(args):
     # set hyper parameters
     config_training_system["trainer_params"] = config_training["trainer_params"]
     config_training_system["train_batch_size"] = args.batch_size
-
+    
     # instantiate PL training system, containing loss function, model, data and training/validation loops
     training_system = hydra.utils.instantiate(
         config_training_system, _recursive_=False

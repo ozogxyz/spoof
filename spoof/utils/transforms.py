@@ -70,7 +70,9 @@ def em_angle(lms: np.ndarray) -> float:
     """Calculate angle between eyes and mouth."""
     if lms.shape[0] == 7:
         eye_center = (lms[:2].mean(axis=0) + lms[2:4].mean(axis=0)) / 2
-    elif lms.shape[0] == 5:  # eye_left , eye_right, nose, mouth_left, mouth_right
+    elif (
+        lms.shape[0] == 5
+    ):  # eye_left , eye_right, nose, mouth_left, mouth_right
         eye_center = lms[:2].mean(axis=0)
     else:
         raise NotImplementedError(
@@ -86,11 +88,13 @@ def _get_size_value(size_param):
     if size_param is None:
         return size_param
     elif isinstance(size_param, int) and size_param > 0:
-        assert size_param > 0, f"Incorrect input: size should be > 0, got {size_param}"
+        assert (
+            size_param > 0
+        ), f"Incorrect input: size should be > 0, got {size_param}"
         return size_param, size_param
-    elif (isinstance(size_param, tuple) or isinstance(size_param, list)) and len(
-        size_param
-    ) == 2:
+    elif (
+        isinstance(size_param, tuple) or isinstance(size_param, list)
+    ) and len(size_param) == 2:
         assert isinstance(
             size_param[0], int
         ), f"Incorrect size[0] type, int expected, got {type(size_param[0])}"
@@ -109,7 +113,7 @@ def _get_size_value(size_param):
 
 
 class ScalingTransform:
-    def __init__(self, size: Tuple[int, int] | None = None):
+    def __init__(self, size: Tuple[int, int] or None = None):
         self.size = _get_size_value(size)
 
 
@@ -121,9 +125,9 @@ class FaceRegionXT(ScalingTransform):
 
     def __init__(
         self,
-        size: Tuple[int, int] | None = None,
+        size: Tuple[int, int] or None = None,
         scale_rect_hw: Tuple[int, int] = (1, 1),
-        crop: Tuple[int, int] | None = None,
+        crop: Tuple[int, int] or None = None,
         interpolation=cv2.INTER_LINEAR,
         p=0.0,
         scale_delta=0.0,
@@ -144,7 +148,9 @@ class FaceRegionXT(ScalingTransform):
         ), f"scale factor for Y should be greater than 0, got {scale_rect_hw[0]:.2f}"
         self.scale_rect_hw = scale_rect_hw
 
-    def get_affine_transform(self, meta: Dict) -> Tuple[np.ndarray, Tuple[int, int]]:
+    def get_affine_transform(
+        self, meta: Dict
+    ) -> Tuple[np.ndarray, Tuple[int, int]]:
         rect = meta["face_rect"]
 
         rx, ry, rw, rh = rect
@@ -175,7 +181,9 @@ class FaceRegionXT(ScalingTransform):
             scale_x, scale_y = 1, 1
             dsize = (size_x, size_y)
 
-        offset_mat = np.array([[1, 0, -rcx], [0, 1, -rcy], [0, 0, 1]], dtype=np.float32)
+        offset_mat = np.array(
+            [[1, 0, -rcx], [0, 1, -rcy], [0, 0, 1]], dtype=np.float32
+        )
         reset_mat = np.array(
             [[1, 0, dsize[0] / 2], [0, 1, dsize[1] / 2], [0, 0, 1]],
             dtype=np.float32,
@@ -229,7 +237,9 @@ class FaceRegionRCXT(FaceRegionXT):
     """Cropping face area with rotation compensation based on nose line (line from center of eye
     positions to center of mouth edges)."""
 
-    def get_affine_transform(self, meta: Dict) -> Tuple[np.ndarray, Tuple[int, int]]:
+    def get_affine_transform(
+        self, meta: Dict
+    ) -> Tuple[np.ndarray, Tuple[int, int]]:
         rect = meta["face_rect"]
         lm_array = meta["face_landmark"]
         # angle = (em_angle(lm_array) - 90) / 180 * np.pi
@@ -259,7 +269,9 @@ class FaceRegionRCXT(FaceRegionXT):
             scale_x, scale_y = 1, 1
             dsize = (size_x, size_y)
 
-        offset_mat = np.array([[1, 0, -rcx], [0, 1, -rcy], [0, 0, 1]], dtype=np.float32)
+        offset_mat = np.array(
+            [[1, 0, -rcx], [0, 1, -rcy], [0, 0, 1]], dtype=np.float32
+        )
         reset_mat = np.array(
             [[1, 0, dsize[0] / 2], [0, 1, dsize[1] / 2], [0, 0, 1]],
             dtype=np.float32,

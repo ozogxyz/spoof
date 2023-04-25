@@ -2,9 +2,8 @@ from torch import nn
 
 
 class MultiLoss(nn.Module):
-    """Combines several loss functions for convenience. Stolen from one of the repos on keypoint
-    detection.
-
+    """Combines several loss functions for convenience.
+    Stolen from one of the repos on keypoint detection.
     *args: [loss weight (float), loss object, ... ]
 
     Example:
@@ -13,7 +12,9 @@ class MultiLoss(nn.Module):
 
     def __init__(self, weighted_loss_list):
         super().__init__()
-        assert len(weighted_loss_list) % 2 == 0, "args must be a list of (float, loss)"
+        assert (
+            len(weighted_loss_list) % 2 == 0
+        ), "args must be a list of (float, loss)"
         self.weights = []
         self.losses = nn.ModuleList()
         for i in range(len(weighted_loss_list) // 2):
@@ -27,7 +28,9 @@ class MultiLoss(nn.Module):
         assert not select or all(1 <= n <= len(self.losses) for n in select)
         details = dict()
         cum_loss = 0
-        for num, (weight, loss_func) in enumerate(zip(self.weights, self.losses), 1):
+        for num, (weight, loss_func) in enumerate(
+            zip(self.weights, self.losses), 1
+        ):
             if select is not None and num not in select:
                 continue
             loss_value = loss_func(**{k: v for k, v in variables.items()})
