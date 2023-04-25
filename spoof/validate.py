@@ -8,6 +8,8 @@ import hydra
 import pytorch_lightning as pl
 import torch
 
+# TODO fix pip install to avoid this
+sys.path.append("../spoof")
 from spoof.dataset import threaded_loader
 from spoof.training_system import SpoofClassificationValidator
 
