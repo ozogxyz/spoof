@@ -21,3 +21,9 @@ test:
 
 test-full:
 	pytest
+
+train-base:
+	python spoof/train.py --device=1 --cfg-training=config/baseline.yaml
+
+train:
+	python spoof/train.py --device=1
