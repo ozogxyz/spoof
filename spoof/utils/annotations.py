@@ -64,7 +64,8 @@ def create_annotations(
     for metadata_file in metadata_files:
         # Get the corresponding extracted frames
         extracted_frames = [
-            str(p) for p in Path(img_root).rglob(f"{Path(metadata_file).stem}*.jpg")
+            str(p)
+            for p in Path(img_root).rglob(f"{Path(metadata_file).stem}*.jpg")
         ]
 
         # Read the metadata file
@@ -73,7 +74,9 @@ def create_annotations(
 
         # Get the face rectangle and landmarks using the frame number as key
         face_rectangles = {int(k): v["face_rect"] for k, v in metadata.items()}
-        face_landmarks = {int(k): v["face_landmark"] for k, v in metadata.items()}
+        face_landmarks = {
+            int(k): v["face_landmark"] for k, v in metadata.items()
+        }
 
         # Rename face_rect to face_rectangle
         for k, v in metadata.items():
@@ -174,7 +177,9 @@ def extract(
         # Extract frames
         frame_count = capture_frames(
             src=video,
-            dest=str(Path(extract_to).joinpath(label).joinpath(Path(video).stem)),
+            dest=str(
+                Path(extract_to).joinpath(label).joinpath(Path(video).stem)
+            ),
         )
 
         total_frame_count += frame_count

@@ -114,7 +114,8 @@ class BaseModule(pl.LightningModule):
         """
         if getattr(self, "lr_scheduler", None) is not None:
             sched_dict = dict(
-                {"scheduler": self.lr_scheduler}, **self.lr_scheduler_run_params
+                {"scheduler": self.lr_scheduler},
+                **self.lr_scheduler_run_params,
             )
             return [self.optimizer], [sched_dict]
 

@@ -22,11 +22,17 @@ test:
 test-full:
 	pytest
 
-train-base:
+train-baseline:
 	python spoof/train.py --device=1 --cfg-training=config/baseline.yaml
 
-train:
-	python spoof/train.py --device=1 --cfg-training=config/train.yaml
+fast-train:
+	python spoof/train.py --device=1 --cfg-training=config/train.yaml -e=2
 
-validate:
-	 python spoof/validate.py --device=1 --config-data=config/validate.yaml --ckpt=logs/ep003_loss0.16_acc0.910_eer0.026.ckpt
+train:
+	python spoof/train.py --device=1 --cfg-training=config/train.yaml -e=20
+
+eval-small:
+	python spoof/validate.py --device=1 --config-data=config/validate.yaml --ckpt=logs/ep018_loss0.00_acc1.000_eer0.000.ckpt
+
+eval-full:
+	python spoof/validate.py --device=1 --config-data=config/test.yaml --ckpt=logs/ep018_loss0.00_acc1.000_eer0.000.ckpt
