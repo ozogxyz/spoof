@@ -3,11 +3,9 @@
 .DS_Store
 **/outputs/
 **/.vscode/
-/tests/sample/*
 data/
 **/data/
 **/*.pth
-tests/
 logs/**
 
 # Byte-compiled / optimized / DLL files

@@ -46,12 +46,10 @@ class CASIA(Dataset):
         # Clamp img to [0, 1]
         transformed_img = torch.clamp(transformed_img, 0, 1)
 
-        filename = f"{img_path}.jpg"
-
         sample_dict = {
             "image": transformed_img,
             "label": label,
-            "filename": filename,
+            "filename": img_path,
         }
 
         return sample_dict
