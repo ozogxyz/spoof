@@ -39,7 +39,9 @@ class CASIA(Dataset):
 
         # Transform and reshape to (C, H, W), to tensor
         transformed_img = self._transform(sample)["image"].transpose((2, 0, 1))
-        transformed_img = torch.tensor(transformed_img, dtype=torch.float32)
+        transformed_img = (
+            torch.tensor(transformed_img, dtype=torch.float32) / 255
+        )
 
         # Clamp img to [0, 1]
         transformed_img = torch.clamp(transformed_img, 0, 1)
