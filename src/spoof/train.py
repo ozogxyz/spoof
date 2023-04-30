@@ -1,6 +1,5 @@
 import argparse
 import logging
-import sys
 
 import hydra
 import pytorch_lightning as pl
@@ -8,7 +7,6 @@ import torch
 import yaml
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-sys.path.append("../spoof")
 logger = logging.getLogger(__name__)
 
 

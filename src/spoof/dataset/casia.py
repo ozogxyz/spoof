@@ -16,15 +16,17 @@ class CASIA(Dataset):
     def __init__(
         self,
         annotations_file: str,
+        data_root: str,
     ):
         self.annotations = pd.read_csv(annotations_file)
+        self.data_root = data_root
 
     def __len__(self):
         return len(self.annotations)
 
     def __getitem__(self, idx):
         img_path = self.annotations.iloc[idx, 0]
-        img_cv2 = cv2.imread(img_path)
+        img_cv2 = cv2.imread(f"{self.data_root}/{img_path}")
         img_cv2 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
 
         label = self.annotations.iloc[idx, -1]

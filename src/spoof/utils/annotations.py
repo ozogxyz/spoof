@@ -95,7 +95,7 @@ def create_annotations(
             if frame_num in face_rectangles and frame_num in face_landmarks:
                 annotations.append(
                     (
-                        str(Path(frame)),
+                        rel_frame_path,
                         face_rectangles[frame_num],
                         face_landmarks[frame_num],
                         label,
@@ -189,21 +189,21 @@ def extract(
 
 
 def main():
-    root = "/home/o-ozoglu/spoof/data/casia/data/train"
-    extr = "/home/o-ozoglu/spoof/data/casia/images/train"
-    meta = "/home/o-ozoglu/spoof/data/casia/meta/train"
+    root = "data/casia/data/train"
+    extr = "data/casia/images/train"
+    meta = "data/casia/meta/train"
     extract(root, extr)
     create_annotations(meta, extr, extr + "/train.csv")
 
-    root = "/home/o-ozoglu/spoof/data/casia/data/val"
-    extr = "/home/o-ozoglu/spoof/data/casia/images/val"
-    meta = "/home/o-ozoglu/spoof/data/casia/meta/val"
+    root = "data/casia/data/val"
+    extr = "data/casia/images/val"
+    meta = "data/casia/meta/val"
     extract(root, extr)
     create_annotations(meta, extr, extr + "/val.csv")
 
-    root = "/home/o-ozoglu/spoof/data/casia/data/test"
-    extr = "/home/o-ozoglu/spoof/data/casia/images/test"
-    meta = "/home/o-ozoglu/spoof/data/casia/meta/test"
+    root = "data/casia/data/test"
+    extr = "data/casia/images/test"
+    meta = "data/casia/meta/test"
     extract(root, extr)
     create_annotations(meta, extr, extr + "/test.csv")
 
