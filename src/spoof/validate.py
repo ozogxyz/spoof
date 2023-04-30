@@ -1,18 +1,15 @@
 import argparse
 import logging
-from pathlib import Path
 import sys
-import yaml
+from pathlib import Path
 
 import hydra
 import pytorch_lightning as pl
 import torch
+import yaml
 
-# TODO fix pip install to avoid this
-sys.path.append("../spoof")
 from spoof.dataset import threaded_loader
 from spoof.training_system import SpoofClassificationValidator
-
 
 logger = logging.getLogger("eval")
 logger.setLevel(logging.INFO)

@@ -11,16 +11,16 @@ format:
 	pre-commit run -a
 
 train-baseline:
-	python spoof/train.py --device=1 --cfg-training=config/baseline.yaml
+	python src/spoof/train.py --device=1 --cfg-training=config/baseline.yaml
 
 fast-train:
-	python spoof/train.py --device=1 --cfg-training=config/train.yaml -e=2
+	python src/spoof/train.py --device=1 --cfg-training=config/train.yaml -e=2
 
 train:
-	python spoof/train.py --device=1 --cfg-training=config/train.yaml -e=20
+	python src/spoof/train.py --device=1 --cfg-training=config/train.yaml -e=20
 
 eval-small:
-	python spoof/validate.py --device=1 --config-data=config/validate.yaml --ckpt=logs/ep018_loss0.00_acc1.000_eer0.000.ckpt
+	python src/spoof/validate.py --device=1 --config-data=config/validate.yaml --ckpt=logs/ep018_loss0.00_acc1.000_eer0.000.ckpt
 
 eval-full:
-	python spoof/validate.py --device=1 --config-data=config/test.yaml --ckpt=logs/ep018_loss0.00_acc1.000_eer0.000.ckpt
+	python src/spoof/validate.py --device=1 --config-data=config/test.yaml --ckpt=logs/ep018_loss0.00_acc1.000_eer0.000.ckpt
