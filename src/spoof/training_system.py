@@ -1,20 +1,19 @@
-from argparse import Namespace
-from copy import deepcopy
 import json
-import numpy as np
 import os
 import warnings
+from argparse import Namespace
+from copy import deepcopy
 
-from hydra.utils import instantiate
+import numpy as np
 import pytorch_lightning as pl
 import torch
+from hydra.utils import instantiate
 from torch import optim
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from spoof.utils.collector import MovingAverageCollector
-from spoof.utils.metrics import accuracy, eer, fcl, lcf, LABEL_LIVE
-
+from spoof.utils.metrics import LABEL_LIVE, accuracy, eer, fcl, lcf
 
 # Lightning prints lots of stuff to STDOUT, might be useful to suppress it
 warnings.filterwarnings(

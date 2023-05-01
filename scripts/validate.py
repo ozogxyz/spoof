@@ -82,7 +82,9 @@ def validate(args):
 
     # model config loading
     logger.info(f"loading model: {args.ckpt}")
-    ckpt_dict = torch.load(args.ckpt, map_location=lambda storage, loc: storage)
+    ckpt_dict = torch.load(
+        args.ckpt, map_location=lambda storage, loc: storage
+    )
     model_config = ckpt_dict["model_config"]
 
     output_dir = Path(args.ckpt).parent
@@ -93,12 +95,16 @@ def validate(args):
     }
     params = {
         "model": model_config,
-        **{k: args.__dict__[k] for k in ["ckpt", "print_threshold", "verbose"]},
+        **{
+            k: args.__dict__[k] for k in ["ckpt", "print_threshold", "verbose"]
+        },
         "trainer_params": params_runner,
     }
     extractor = SpoofClassificationValidator(**params)
 
-    runner = pl.Trainer(logger=True, replace_sampler_ddp=False, **params_runner)
+    runner = pl.Trainer(
+        logger=True, replace_sampler_ddp=False, **params_runner
+    )
     for subset_name, subset_ds_config in data_config_dict.items():
         subset_ds = hydra.utils.instantiate(subset_ds_config)
         subset_ds.name = subset_name
