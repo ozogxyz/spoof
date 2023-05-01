@@ -1,4 +1,0 @@
-val_base:
-  _target_: spoof.dataset.CASIA
-  data_root: ${oc.env:PROJECT_ROOT}/data/casia/images/val
-  annotations_file: ${.data_root}/val.csv

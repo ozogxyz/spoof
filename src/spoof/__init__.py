@@ -1,1 +1,1 @@
-# from .training_system import SpoofClassificationSystem
+from .training_system import SpoofClassificationSystem
