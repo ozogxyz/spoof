@@ -1,4 +1,5 @@
 import logging
+import os
 
 import cv2
 import pandas as pd
@@ -24,6 +25,9 @@ class FaceDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = self.annotations.iloc[idx, 0]
+        if not os.path.exists(img_path):
+            logger.debug(f"Image {img_path} not found")
+            raise FileNotFoundError(f"Image {img_path} not found")
         img_cv2 = cv2.imread(img_path)
         img_cv2 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
 

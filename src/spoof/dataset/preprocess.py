@@ -75,26 +75,18 @@ def real(filename: str) -> bool:
 
 
 if __name__ == "__main__":
-    video_dir = "data/replay/train"
-    extract(video_dir, video_ext=".mov")
-    create_annotations(video_dir, video_dir + "/annotations.csv")
+    extract("data/replay/train", video_ext=".mov")
+    extract("data/replay/val", video_ext=".mov")
+    extract("data/replay/test", video_ext=".mov")
+    extract("data/casia/train", video_ext=".avi")
+    extract("data/casia/val", video_ext=".avi")
+    extract("data/casia/test", video_ext=".avi")
 
-    video_dir = "data/replay/val"
-    extract(video_dir, video_ext=".mov")
-    create_annotations(video_dir, video_dir + "/annotations.csv")
-
-    video_dir = "data/replay/test"
-    extract(video_dir, video_ext=".mov")
-    create_annotations(video_dir, video_dir + "/annotations.csv")
-
-    video_dir = "data/casia/train"
-    extract(video_dir, video_ext=".avi")
-    create_annotations(video_dir, video_dir + "/annotations.csv")
-
-    video_dir = "data/casia/val"
-    extract(video_dir, video_ext=".avi")
-    create_annotations(video_dir, video_dir + "/annotations.csv")
-
-    video_dir = "data/casia/test"
-    extract(video_dir, video_ext=".avi")
-    create_annotations(video_dir, video_dir + "/annotations.csv")
+    create_annotations(
+        "data/replay/train", "data/replay/train/annotations.csv"
+    )
+    create_annotations("data/replay/val", "data/replay/val/annotations.csv")
+    create_annotations("data/replay/test", "data/replay/test/annotations.csv")
+    create_annotations("data/casia/train", "data/casia/train/annotations.csv")
+    create_annotations("data/casia/val", "data/casia/val/annotations.csv")
+    create_annotations("data/casia/test", "data/casia/test/annotations.csv")
