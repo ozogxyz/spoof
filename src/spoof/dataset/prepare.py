@@ -13,7 +13,7 @@ logger.setLevel("DEBUG")
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--video_dir", type=str, default="data")
+    parser.add_argument("-r", "--data_root", type=str, default="data")
     parser.add_argument(
         "-d",
         "--dataset",
@@ -27,9 +27,11 @@ def parse_args():
 
 
 def prepare(args: argparse.Namespace) -> None:
+    print(f"Dataset: {args.dataset}")
     for split in ["train", "val", "test"]:
         logger.info(f"Processing {split} split")
-        video_dir = Path(args.video_dir) / args.dataset / split
+        print(f"Processing {split} split")
+        video_dir = Path(args.data_root) / args.dataset / split
         if not video_dir.exists():
             logger.error(f"{video_dir} does not exist")
             return
@@ -44,6 +46,7 @@ def prepare(args: argparse.Namespace) -> None:
         videos = [str(p) for p in Path(video_dir).rglob(f"*{video_ext}")]
 
         logger.info(f"Found {len(videos)} videos in {video_dir}")
+        print(f"Found {len(videos)} videos in {video_dir}")
 
         for video in tqdm(
             videos,
@@ -69,14 +72,22 @@ def prepare(args: argparse.Namespace) -> None:
 
                 cap.release()
 
-        metadata_files = [str(p) for p in Path(args.video_dir).rglob("*json")]
+        metadata_files = [str(p) for p in Path(video_dir).rglob("*json")]
 
         logger.info(
-            f"Found {len(metadata_files)} files in {metadata_files[0]}"
+            f"Found {len(metadata_files)} metadata files in {video_dir}"
         )
+        print(f"Found {len(metadata_files)} metadata files in {video_dir}")
 
         annotations = []
-        for metadata_file in tqdm(metadata_files):
+        for metadata_file in tqdm(
+            metadata_files,
+            desc="Processing metadata",
+            unit="metadata",
+            leave=False,
+            ncols=80,
+            ascii=True,
+        ):
             with open(metadata_file) as f:
                 metadata = json.load(f)
             for key in metadata.keys():
@@ -91,8 +102,9 @@ def prepare(args: argparse.Namespace) -> None:
                     ]
                 )
 
-        dest = Path(args.video_dir) / args.dataset / split / "annotations.csv"
+        dest = video_dir / "annotations.csv"
         logger.info(f"Saving annotations to {dest}")
+        print(f"Saving annotations to {dest}")
         with open(dest, "w") as f:
             writer = csv.writer(f)
             writer.writerows(annotations)
