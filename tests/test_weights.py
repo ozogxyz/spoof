@@ -4,7 +4,9 @@ import torch
 
 @pytest.fixture
 def model_transformer():
-    model = torch.load("logs/model.ckpt", map_location="cpu")["state_dict"]
+    model = torch.load(
+        "logs/ep000_loss0.28_acc0.976_eer0.019.ckpt", map_location="cpu"
+    )["state_dict"]
     # Pop the mean and std buffers
     model.pop("model.input_mean")
     model.pop("model.input_std")
@@ -15,7 +17,7 @@ def model_transformer():
 @pytest.fixture
 def vit_transformer():
     return torch.load(
-        "/Users/motorbreath/.cache/torch/hub/checkpoints/vit_b_16-c867db91.pth",
+        "/home/o-ozoglu/.cache/torch/hub/checkpoints/vit_b_16-c867db91.pth",
         map_location="cpu",
     )
 
