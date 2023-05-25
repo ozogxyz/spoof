@@ -33,7 +33,7 @@ training_system:
 
     val_base:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/replay/val/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/replay/devel/annotations.csv
 
 trainer_params:
   max_epochs: 1
