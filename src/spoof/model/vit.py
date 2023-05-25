@@ -2,6 +2,13 @@ import torch
 import torch.nn as nn
 from torchvision.models import vit_b_16, ViT_B_16_Weights
 
+# TODO try HTER
+# TODO try HTER low res casia vga
+# TODO when training casia train on low res
+# TODO maybe try less blocks
+# TODO try SiWM against LACC
+# TODO try out_logit = out_dict["out_logit"] / 2 or 3 only in testing
+
 
 class ViT(nn.Module):
     def __init__(
@@ -39,6 +46,8 @@ class ViT(nn.Module):
 
     def get_liveness_score(self, out_dict):
         out_logit = out_dict["out_logit"]
+        # out_logit = out_dict["out_logit"] / 2 or 3, only during testing
+        # check self.training
         return torch.sigmoid(out_logit)
 
     def forward(self, in_tensor):

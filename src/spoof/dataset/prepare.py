@@ -28,7 +28,7 @@ def parse_args():
 
 def prepare(args: argparse.Namespace) -> None:
     print(f"Dataset: {args.dataset}")
-    for split in ["train", "val", "test"]:
+    for split in ["train", "devel", "test"]:
         logger.info(f"Processing {split} split")
         print(f"Processing {split} split")
         video_dir = Path(args.data_root) / args.dataset / split

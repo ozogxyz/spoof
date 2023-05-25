@@ -4,7 +4,7 @@ training_system:
   train_vis_freq: 0.2
   val_vis_freq: 0.2
 
-  lr: 0.001
+  lr: 0.0001
   weight_decay: 0.00001
 
   train_batch_size: 16
@@ -31,9 +31,9 @@ training_system:
 
     val_base:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/replay/val/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/replay/devel/annotations.csv
 
 trainer_params:
-  max_epochs: 1
+  max_epochs: 5
   fast_dev_run: 0
   precision: 16 # select 16 for speedup
