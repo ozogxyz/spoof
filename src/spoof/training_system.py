@@ -234,7 +234,7 @@ class SpoofClassificationValidator(BaseModule):
         self.dump_scores(metrics, subset)
 
     @staticmethod
-    def calc_metrics(labels, scores, threshold=0.5):
+    def calc_metrics(labels, scores, threshold):
         eer_value, th_eer = eer(
             np.array(labels) == LABEL_LIVE, np.array(scores)
         )

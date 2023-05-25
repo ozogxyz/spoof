@@ -10,6 +10,8 @@ training_system:
   train_batch_size: 16
   eval_batch_size: 8
 
+  eval_threshold: 0.372
+
   model:
     _target_: spoof.model.ViT
     dim_embedding: 768
