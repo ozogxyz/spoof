@@ -1,3 +1,3 @@
 test:
   _target_: spoof.dataset.FaceDataset
-  annotations_file: ${oc.env:HOME}/spoof/data/replay/test/annotations.csv
+  annotations_file: ${oc.env:HOME}/spoof/data/casia/test/annotations.csv

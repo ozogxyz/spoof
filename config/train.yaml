@@ -29,11 +29,11 @@ training_system:
   data:
     train:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/casia/train/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/replay/train/annotations.csv
 
     val_base:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/casia/val/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/replay/devel/annotations.csv
 
 trainer_params:
   max_epochs: 1
