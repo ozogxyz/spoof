@@ -4,11 +4,13 @@ training_system:
   train_vis_freq: 0.2
   val_vis_freq: 0.2
 
-  lr: 0.001
+  lr: 0.0001
   weight_decay: 0.00001
 
   train_batch_size: 16
   eval_batch_size: 8
+
+  eval_threshold: 0.372
 
   model:
     _target_: spoof.model.ViT
@@ -26,14 +28,14 @@ training_system:
 
   data:
     train:
-      _target_: spoof.dataset.CASIA
-      annotations_file: ${oc.env:HOME}/spoof/data/casia/images/train/train.csv
+      _target_: spoof.dataset.FaceDataset
+      annotations_file: ${oc.env:HOME}/spoof/data/replay/train/annotations.csv
 
     val_base:
-      _target_: spoof.dataset.CASIA
-      annotations_file: ${oc.env:HOME}/spoof/data/casia/images/val/val.csv
+      _target_: spoof.dataset.FaceDataset
+      annotations_file: ${oc.env:HOME}/spoof/data/replay/devel/annotations.csv
 
 trainer_params:
-  max_epochs: 1
+  max_epochs: 5
   fast_dev_run: 0
   precision: 16 # select 16 for speedup

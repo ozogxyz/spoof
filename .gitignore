@@ -3,12 +3,12 @@
 .DS_Store
 **/outputs/
 **/.vscode/
-/tests/sample/*
 data/
 **/data/
 **/*.pth
-tests/
-logs/**
+# logs/**
+**/*.ckpt
+logs/lightning_logs
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
