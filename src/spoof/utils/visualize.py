@@ -28,7 +28,7 @@ def draw_landmarks(frame, landmark_points):
     """
     landmark_points = landmark_points.reshape(-1, 2)
     for x, y in landmark_points:
-        cv2.circle(frame, (int(x), int(y)), 3, (0, 0, 255), -1)
+        cv2.circle(frame, (int(x), int(y)), 5, (0, 0, 255), -1)
 
     return frame
 
