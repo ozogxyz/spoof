@@ -6,7 +6,9 @@
 data/
 **/data/
 **/*.pth
-logs/**
+# logs/**
+**/*.ckpt
+logs/lightning_logs
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
