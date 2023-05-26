@@ -6,6 +6,7 @@
 data/
 **/data/
 **/*.pth
+!**/*.json
 logs/**
 
 # Byte-compiled / optimized / DLL files

@@ -11,4 +11,7 @@ format:
 	pre-commit run -a
 
 eval:
-	python src/spoof/validate.py --ckpt=logs/ep009_loss0.01_acc1.000_eer0.000.ckpt --device=3 --config-data=config/eval.yaml
+	python src/spoof/validate.py --ckpt=logs/ep004_loss0.00_acc1.000_eer0.000.ckpt --device=3 --config-data=config/test.yaml
+
+train:
+	python src/spoof/train.py --device=3 --cfg-training=config/train.yaml -e=5
