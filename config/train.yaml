@@ -10,7 +10,6 @@ training_system:
   train_batch_size: 16
   eval_batch_size: 8
 
-  eval_threshold: 0.372
 
   model:
     _target_: spoof.model.ViT
@@ -29,11 +28,11 @@ training_system:
   data:
     train:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/replay/train/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/siwm/train_annotations.csv
 
     val_base:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/replay/devel/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/siwm/test_annotations.csv
 
 trainer_params:
   max_epochs: 5
