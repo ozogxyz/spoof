@@ -2,11 +2,10 @@ import os
 import csv
 import glob
 import json
-import argparse
 
 root_dir = "data/siwm"
-live_train_dir = os.path.join(root_dir, "every5-live-train")
-live_test_dir = os.path.join(root_dir, "every5-live-test")
+live_train_dir = os.path.join(root_dir, "every5-live_train")
+live_test_dir = os.path.join(root_dir, "every5-live_test")
 spoof_dir = os.path.join(root_dir, "every5-spoof")
 
 
@@ -35,6 +34,7 @@ def create_annotations_file(output_file, annotations):
                 "landmark_x7",
                 "landmark_y7",
                 "class_label",
+                "spoof_type",
             ]
         )
 
@@ -42,7 +42,7 @@ def create_annotations_file(output_file, annotations):
             writer.writerow(annotation)
 
 
-def process_annotations(image_paths, annotations, label):
+def process_annotations(image_paths, annotations, label, spoof_type):
     for image_path in image_paths:
         metadata_file = image_path.replace(".png", ".json")
 
@@ -50,63 +50,67 @@ def process_annotations(image_paths, annotations, label):
             metadata = json.load(f)
         face_rect = metadata["face_rectangle"]
         face_landmark = metadata["face_landmark"]
-        annotation = [image_path, *face_rect, *face_landmark, label]
+        annotation = [
+            image_path,
+            *face_rect,
+            *face_landmark,
+            label,
+            spoof_type,
+        ]
         annotations.append(annotation)
 
 
-def main(spoof_type_to_leave_out):
-    # Create train annotations
+def create_train_annotations():
     train_annotations_file = "data/siwm/train_annotations.csv"
     train_image_paths = glob.glob(
         os.path.join(live_train_dir, "**/*.png"), recursive=True
     )
     train_annotations = []
 
-    process_annotations(train_image_paths, train_annotations, 1)
+    process_annotations(train_image_paths, train_annotations, 1, "live")
 
-    # Add spoof images to train annotations
     spoof_annotations = []
     spoof_subfolders = glob.glob(os.path.join(spoof_dir, "*"))
 
     for spoof_subfolder in spoof_subfolders:
         spoof_type = os.path.basename(spoof_subfolder)
-
-        if spoof_type != spoof_type_to_leave_out:
-            spoof_image_paths = glob.glob(
-                os.path.join(spoof_subfolder, "**/*.png"), recursive=True
-            )
-            process_annotations(spoof_image_paths, spoof_annotations, 0)
+        spoof_image_paths = glob.glob(
+            os.path.join(spoof_subfolder, "**/*.png"), recursive=True
+        )
+        process_annotations(
+            spoof_image_paths, spoof_annotations, 0, spoof_type
+        )
 
     train_annotations += spoof_annotations
 
     create_annotations_file(train_annotations_file, train_annotations)
 
-    # Create test annotations
+
+def create_test_annotations():
     test_annotations_file = "data/siwm/test_annotations.csv"
     test_image_paths = glob.glob(
         os.path.join(live_test_dir, "**/*.png"), recursive=True
     )
     test_annotations = []
 
-    # Add live images to test annotations
-    process_annotations(test_image_paths, test_annotations, 1)
+    process_annotations(test_image_paths, test_annotations, 1, "live")
 
-    # Add spoof images from the left-out spoof type to test annotations
-    leave_out_image_paths = glob.glob(
-        os.path.join(spoof_dir, spoof_type_to_leave_out, "**/*.png"),
-        recursive=True,
-    )
-    process_annotations(leave_out_image_paths, test_annotations, 0)
+    spoof_annotations = []
+    spoof_subfolders = glob.glob(os.path.join(spoof_dir, "*"))
+
+    for spoof_subfolder in spoof_subfolders:
+        spoof_type = os.path.basename(spoof_subfolder)
+        spoof_image_paths = glob.glob(
+            os.path.join(spoof_subfolder, "**/*.png"), recursive=True
+        )
+        process_annotations(
+            spoof_image_paths, spoof_annotations, 0, spoof_type
+        )
+
+    test_annotations += spoof_annotations
 
     create_annotations_file(test_annotations_file, test_annotations)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Create train and test annotations for leave-one-out protocol"
-    )
-    parser.add_argument(
-        "--spoof-type", help="Spoof type to leave out for testing"
-    )
-    args = parser.parse_args()
-    main(args.spoof_type)
+create_train_annotations()
+create_test_annotations()

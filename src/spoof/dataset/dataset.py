@@ -33,7 +33,7 @@ class FaceDataset(Dataset):
 
         # Get face rect and landmark
         face_rect = self.annotations.iloc[idx, 1:5].values
-        face_landmark = self.annotations.iloc[idx, 5:-1].values.reshape(
+        face_landmark = self.annotations.iloc[idx, 5:-2].values.reshape(
             (-1, 2)
         )
         meta = {"face_rect": face_rect, "face_landmark": face_landmark}
@@ -68,3 +68,14 @@ class FaceDataset(Dataset):
 
     def __repr__(self) -> str:
         return f"FaceDataset({len(self.annotations)} samples)"
+
+    def leave_out(self, spoof_type: str):
+        self.annotations = self.annotations[
+            self.annotations["spoof_type"] != spoof_type
+        ]
+
+    def leave_out_all_except(self, spoof_type):
+        self.annotations = self.annotations[
+            (self.annotations["spoof_type"] == spoof_type)
+            | (self.annotations["spoof_type"] == "live")
+        ]
