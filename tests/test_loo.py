@@ -1,48 +1,59 @@
-import pandas as pd
-import os
+import pytest
+from spoof.dataset.dataset import FaceDataset
 
 
-def test_dataset_overlap():
+def test_leave_out():
     train_annotations_file = "data/siwm/train_annotations.csv"
+    train_dataset = FaceDataset(train_annotations_file)
+    spoof_types = train_dataset.annotations["spoof_type"].unique()
+    initial_length = len(train_dataset)
+
+    for spoof_type in spoof_types:
+        train_dataset_leave_out = FaceDataset(train_annotations_file)
+        train_dataset_leave_out.leave_out(spoof_type)
+        new_length = len(train_dataset_leave_out)
+
+        expected_removed_samples = (
+            train_dataset.annotations["spoof_type"]
+            .value_counts()
+            .get(spoof_type, 0)
+        )
+
+        assert new_length == initial_length - expected_removed_samples
+        assert (
+            spoof_type
+            not in train_dataset_leave_out.annotations["spoof_type"].unique()
+        )
+
+
+def test_leave_out_all_except():
     test_annotations_file = "data/siwm/test_annotations.csv"
+    test_dataset = FaceDataset(test_annotations_file)
+    spoof_types = test_dataset.annotations["spoof_type"].unique()
 
-    # Load train and test annotation files into dataframes
-    train_df = pd.read_csv(train_annotations_file)
-    test_df = pd.read_csv(test_annotations_file)
+    for spoof_type in spoof_types:
+        test_dataset_leave_out_all_except = FaceDataset(test_annotations_file)
+        test_dataset_leave_out_all_except.leave_out_all_except(spoof_type)
+        new_length = len(test_dataset_leave_out_all_except)
 
-    # Extract filenames or identifiers from train and test dataframes
-    train_filenames = set(train_df["image_path"])
-    test_filenames = set(test_df["image_path"])
+        expected_removed_samples = (
+            test_dataset.annotations["spoof_type"]
+            .value_counts()
+            .get(spoof_type, 0)
+        )
 
-    # Check for overlap between train and test datasets
-    overlap = train_filenames.intersection(test_filenames)
-    assert (
-        len(overlap) == 0
-    ), "There is overlap between train and test datasets."
-
-
-def test_leave_one_out():
-    train_annotations_file = "data/siwm/train_annotations.csv"
-    test_annotations_file = "data/siwm/test_annotations.csv"
-    spoof_type = "replay"
-
-    # Load train and test annotation files into dataframes
-    train_df = pd.read_csv(train_annotations_file)
-    test_df = pd.read_csv(test_annotations_file)
-
-    # Verify the leave-one-out protocol
-    train_spoof_types = set(
-        [os.path.dirname(path) for path in train_df["image_path"]]
-    )
-    test_spoof_types = set(
-        [os.path.dirname(path) for path in test_df["image_path"]]
-    )
-
-    assert not any(
-        spoof_type in path for path in train_spoof_types
-    ), f"Train examples contain the specified spoof type: {spoof_type}"
-    assert all(
-        spoof_type in path for path in test_spoof_types
-    ), "Test examples do not have the specified spoof type."
-
-    print("Leave-one-out protocol is correctly implemented.")
+        assert new_length == expected_removed_samples
+        assert (
+            spoof_type
+            in test_dataset_leave_out_all_except.annotations[
+                "spoof_type"
+            ].unique()
+        )
+        assert (
+            len(
+                test_dataset_leave_out_all_except.annotations[
+                    "spoof_type"
+                ].unique()
+            )
+            == 1
+        )
