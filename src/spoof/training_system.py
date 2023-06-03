@@ -309,6 +309,7 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
             #     self.list_ds_val[-1].name = name
 
             self.ds_val = instantiate(data_config["val_base"])
+            print(self.ds_val.spoof_type)
             if self.ds_val.spoof_type:
                 self.ds_val.name = self.ds_val.spoof_type
             else:

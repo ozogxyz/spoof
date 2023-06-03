@@ -19,7 +19,10 @@ class FaceDataset(Dataset):
         annotations_file: str,
     ):
         self.annotations = pd.read_csv(annotations_file)
-        self.spoof_type = None
+        if "spoof_type" in self.annotations.columns:
+            self.spoof_type = self.annotations.iloc[
+                -1, self.annotations.columns.get_loc("spoof_type")
+            ]
 
     def __len__(self):
         return len(self.annotations)
@@ -53,11 +56,6 @@ class FaceDataset(Dataset):
         label = self.annotations.iloc[
             idx, self.annotations.columns.get_loc("class_label")
         ]
-
-        if "spoof_type" in self.annotations.columns:
-            self.spoof_type = self.annotations.iloc[
-                idx, self.annotations.columns.get_loc("spoof_type")
-            ]
 
         sample_dict = {
             "image": transformed_img,

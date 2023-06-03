@@ -4,6 +4,7 @@ import logging
 import os
 
 import hydra
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import yaml
@@ -84,9 +85,9 @@ def train(args: argparse.Namespace):
     params_trainer = config_training_system["trainer_params"]
     params_trainer["max_epochs"] = args.epochs
     params_trainer["default_root_dir"] = args.train_dir
-    if args.device is not None:
-        params_trainer["devices"] = [args.device]
-        params_trainer["accelerator"] = "gpu"
+    # if args.device is not None:
+    #     params_trainer["devices"] = [args.device]
+    #     params_trainer["accelerator"] = "gpu"
 
     # # training callbacks, e.g. model checkpoint saving or TQDM progress bar
     logger.info(
@@ -109,6 +110,8 @@ def train(args: argparse.Namespace):
         replace_sampler_ddp=False,
         benchmark=torch.backends.cudnn.benchmark,
         enable_progress_bar=False,
+        accelerator="mps",
+        devices=1,
         **params_trainer,
     )
 
@@ -123,19 +126,16 @@ def train(args: argparse.Namespace):
 
     aggregated_metrics = {}
     # Iterate over the spoof types
-    for spoof_type in spoof_types:
+    for spoof_type in spoof_types[:2]:
         logger.info("Training for Spoof Type: %s", spoof_type)
         logger.info("-" * 60)  # Separator
 
         # Create a copy of the train_dataset annotations
         train_dataset_copy = copy.deepcopy(train_dataset)
-
         # Create a copy of the val_dataset annotations
         val_dataset_copy = copy.deepcopy(val_dataset)
-
         # Filter the train_dataset annotations to remove the current spoof type
         train_dataset_copy.leave_out(spoof_type)
-
         # Filter the val_dataset annotations to add the current spoof type
         val_dataset_copy.leave_out_all_except(spoof_type)
 
@@ -165,18 +165,28 @@ def train(args: argparse.Namespace):
         train_metrics = trainer.callback_metrics
         logger.info(train_metrics)
 
-    # Calculate overall average metrics across spoof types
-    # overall_avg_metrics = {metric: sum(values) / len(values) for metric, values in aggregated_metrics.items()}
+        print(train_metrics)
+        # Add the average metrics to the aggregated_metrics dictionary
+        for metric, value in train_metrics.items():
+            aggregated_metrics.setdefault(metric, []).append(value)
 
-    # logger.info("Overall Average Metrics:")
-    # logger.info(overall_avg_metrics)
+    # Print the aggregated_metrics dictionary
+    logger.info("-" * 60)  # Separator
+    logger.info("Aggregated Metrics")
+    logger.info(aggregated_metrics)
 
-    # # Save overall average metrics
-    # overall_metrics_file = os.path.join(output_dir, "metrics_overall.txt")
-    # with open(overall_metrics_file, "w") as f:
-    #     for metric, value in overall_avg_metrics.items():
-    #         f.write(f"{metric}: {value}\n")
-    # logger.info("Overall Average Metrics saved to file: %s", overall_metrics_file)
+    # Average the aggregated_metrics dictionary
+    average_metrics = {
+        metric: np.mean(values)
+        for metric, values in aggregated_metrics.items()
+    }
+    logger.info("-" * 60)  # Separator
+    logger.info("Average Metrics")
+    logger.info(average_metrics)
+
+    # Save the average metrics to a file
+    with open("logs/stats/metrics.log", "a") as f:
+        f.write(str(aggregated_metrics) + "\n")
 
 
 if __name__ == "__main__":
