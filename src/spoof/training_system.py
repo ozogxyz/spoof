@@ -301,19 +301,8 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
             data_config = deepcopy(self.hparams.data)
             self.ds_train = instantiate(data_config["train"])
             self.ds_train.name = "train"
-
-            # val_subsets = [k for k in data_config.keys() if "val" in k]
-            # self.list_ds_val = []
-            # for name in val_subsets:
-            #     self.list_ds_val.append(instantiate(data_config[name]))
-            #     self.list_ds_val[-1].name = name
-
             self.ds_val = instantiate(data_config["val_base"])
-            print(self.ds_val.spoof_type)
-            if self.ds_val.spoof_type:
-                self.ds_val.name = self.ds_val.spoof_type
-            else:
-                self.ds_val.name = "val_base"
+            self.ds_val.name = "val_base"
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
         """
@@ -337,15 +326,6 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
         """
         is_cuda = "cuda" in self.device.type
         num_workers = 0 if os.name == "nt" else 4
-        # loaders_val = [
-        #     DataLoader(
-        #         elem,
-        #         batch_size=self.eval_batch_size,
-        #         pin_memory=is_cuda,
-        #         num_workers=num_workers,
-        #     )
-        #     for elem in self.list_ds_val
-        # ]
         loaders_val = DataLoader(
             self.ds_val,
             batch_size=self.eval_batch_size,
