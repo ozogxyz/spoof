@@ -19,10 +19,7 @@ class FaceDataset(Dataset):
         annotations_file: str,
     ):
         self.annotations = pd.read_csv(annotations_file)
-        if "spoof_type" in self.annotations.columns:
-            self.spoof_type = self.annotations.iloc[
-                -1, self.annotations.columns.get_loc("spoof_type")
-            ]
+        self.spoof_type = None
 
     def __len__(self):
         return len(self.annotations)
@@ -81,9 +78,11 @@ class FaceDataset(Dataset):
         self.annotations = self.annotations[
             self.annotations["spoof_type"] != spoof_type
         ]
+        self.spoof_type = spoof_type
 
     def leave_out_all_except(self, spoof_type):
         self.annotations = self.annotations[
             (self.annotations["spoof_type"] == spoof_type)
             | (self.annotations["spoof_type"] == "live")
         ]
+        self.spoof_type = spoof_type
