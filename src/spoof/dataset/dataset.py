@@ -19,6 +19,7 @@ class FaceDataset(Dataset):
         annotations_file: str,
     ):
         self.annotations = pd.read_csv(annotations_file)
+        self.spoof_type = None
 
     def __len__(self):
         return len(self.annotations)
@@ -48,7 +49,16 @@ class FaceDataset(Dataset):
         # Clamp img to [0, 1]
         transformed_img = torch.clamp(transformed_img, 0, 1)
 
-        label = self.annotations.iloc[idx, -1]
+        # annotations may not have labels in last column for all datasets
+        label = self.annotations.iloc[
+            idx, self.annotations.columns.get_loc("class_label")
+        ]
+
+        if "spoof_type" in self.annotations.columns:
+            self.spoof_type = self.annotations.iloc[
+                idx, self.annotations.columns.get_loc("spoof_type")
+            ]
+
         sample_dict = {
             "image": transformed_img,
             "label": label,

@@ -1,6 +1,7 @@
 import argparse
 import copy
 import logging
+import os
 
 import hydra
 import pytorch_lightning as pl
@@ -57,6 +58,10 @@ def train(args: argparse.Namespace):
 
     # disable lots of pytorch lightning logs, set to logging.INFO for verbosity if needed
     logging.getLogger("pytorch_lightning").setLevel(logging.INFO)
+    output_dir = "logs/stats/"
+    os.makedirs(output_dir, exist_ok=True)
+    file_handler = logging.FileHandler(os.path.join(output_dir, "metrics.log"))
+    logger.addHandler(file_handler)
 
     # read training config with keys 'model', 'loss' and 'data'
     path_config_training = args.cfg_training
@@ -104,36 +109,23 @@ def train(args: argparse.Namespace):
         replace_sampler_ddp=False,
         benchmark=torch.backends.cudnn.benchmark,
         enable_progress_bar=False,
-        accelerator="mps",
-        devices=1,
         **params_trainer,
     )
 
     # Get the list of unique spoof types in the training dataset
     train_dataset = training_system.train_dataloader().dataset
     val_dataset = training_system.val_dataloader().dataset
+
     # Get the list of unique spoof types in the training dataset, excluding "live"
     spoof_types = train_dataset.annotations[
         train_dataset.annotations["spoof_type"] != "live"
     ]["spoof_type"].unique()
 
-    # Print total counts and lengths of training and validation datasets
-    print("Training Dataset:")
-    print(train_dataset.annotations["spoof_type"].value_counts())
-    print("Total Samples:", len(train_dataset))
-    print("-" * 60)  # Separator
-    print()
-
-    print("Validation Dataset:")
-    print(val_dataset.annotations["spoof_type"].value_counts())
-    print("Total Samples:", len(val_dataset))
-    print("-" * 60)  # Separator
-    print()
-
+    aggregated_metrics = {}
     # Iterate over the spoof types
     for spoof_type in spoof_types:
-        print("Training for Spoof Type:", spoof_type)
-        print("-" * 60)  # Separator
+        logger.info("Training for Spoof Type: %s", spoof_type)
+        logger.info("-" * 60)  # Separator
 
         # Create a copy of the train_dataset annotations
         train_dataset_copy = copy.deepcopy(train_dataset)
@@ -148,20 +140,43 @@ def train(args: argparse.Namespace):
         val_dataset_copy.leave_out_all_except(spoof_type)
 
         # Print the length of train_dataset_copy
-        print(
-            "Train Dataset Length (After Excluding):", len(train_dataset_copy)
+        logger.info(
+            "Train Dataset Length (After Excluding): %d",
+            len(train_dataset_copy),
         )
-        print(train_dataset_copy.annotations["spoof_type"].value_counts())
-        print("-" * 60)  # Separator
+        logger.info(
+            train_dataset_copy.annotations["spoof_type"].value_counts()
+        )
+        logger.info("-" * 60)  # Separator
 
         # Print the length of val_dataset_copy
-        print(
-            "Validation Dataset Length (After Including):",
+        logger.info(
+            "Validation Dataset Length (After Including): %d",
             len(val_dataset_copy),
         )
-        print(val_dataset_copy.annotations["spoof_type"].value_counts())
-        print("-" * 60)  # Separator
-        print()
+        logger.info(val_dataset_copy.annotations["spoof_type"].value_counts())
+        logger.info("-" * 60)  # Separator
+        logger.info("\n")
+
+        # Train the model
+        trainer.fit(training_system)
+
+        # Calculate average metrics
+        train_metrics = trainer.callback_metrics
+        logger.info(train_metrics)
+
+    # Calculate overall average metrics across spoof types
+    # overall_avg_metrics = {metric: sum(values) / len(values) for metric, values in aggregated_metrics.items()}
+
+    # logger.info("Overall Average Metrics:")
+    # logger.info(overall_avg_metrics)
+
+    # # Save overall average metrics
+    # overall_metrics_file = os.path.join(output_dir, "metrics_overall.txt")
+    # with open(overall_metrics_file, "w") as f:
+    #     for metric, value in overall_avg_metrics.items():
+    #         f.write(f"{metric}: {value}\n")
+    # logger.info("Overall Average Metrics saved to file: %s", overall_metrics_file)
 
 
 if __name__ == "__main__":

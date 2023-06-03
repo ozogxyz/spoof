@@ -309,7 +309,10 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
             #     self.list_ds_val[-1].name = name
 
             self.ds_val = instantiate(data_config["val_base"])
-            self.ds_val.name = "val_base"
+            if self.ds_val.spoof_type:
+                self.ds_val.name = self.ds_val.spoof_type
+            else:
+                self.ds_val.name = "val_base"
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
         """
