@@ -5,13 +5,11 @@ import logging
 import os
 
 import hydra
-import numpy as np
 import pytorch_lightning as pl
 import torch
 import yaml
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-from spoof.dataset.dataset import FaceDataset
 
 logger = logging.getLogger(__name__)
 
@@ -104,18 +102,6 @@ def train(args: argparse.Namespace):
 
     callbacks = [checkpoint_callback]
 
-    # instantiate trainer class, responsible for data loading, compute precision, GPU management, etc.
-    trainer = pl.Trainer(
-        logger=True,
-        callbacks=callbacks,
-        replace_sampler_ddp=False,
-        benchmark=torch.backends.cudnn.benchmark,
-        enable_progress_bar=False,
-        accelerator="mps",
-        devices=1,
-        **params_trainer,
-    )
-
     # Get the list of unique spoof types in the training dataset
     train_dataset = training_system.train_dataloader().dataset
     val_dataset = training_system.val_dataloader().dataset
@@ -128,43 +114,38 @@ def train(args: argparse.Namespace):
     aggregated_metrics = {}
     # Iterate over the spoof types
     for spoof_type in spoof_types:
+        trainer = pl.Trainer(
+            logger=True,
+            callbacks=callbacks,
+            replace_sampler_ddp=False,
+            benchmark=torch.backends.cudnn.benchmark,
+            enable_progress_bar=False,
+            **params_trainer,
+        )
+
         logger.info("Training for Spoof Type: %s", spoof_type)
         logger.info("-" * 60)  # Separator
 
         # Copy and update the datasets
         train_dataset_copy = copy.deepcopy(train_dataset)
-        val_dataset_copy = copy.deepcopy(val_dataset)
         train_dataset_copy.leave_out(spoof_type)
-        val_dataset_copy.leave_out_all_except(spoof_type)
         training_system.train_dataset = train_dataset_copy
-        training_system.val_dataset = val_dataset_copy
 
-        # Print the length of training_system.train_dataset
-        logger.info(
-            "Train Dataset Length (Before Excluding): %d",
-            len(training_system.train_dataset),
-        )
-        logger.info(
-            training_system.train_dataset.annotations[
-                "spoof_type"
-            ].value_counts()
-        )
-        logger.info("-" * 60)  # Separator
-        # print(training_system.train_dataset.spoof_type)
+        val_dataset_copy = copy.deepcopy(val_dataset)
+        val_dataset_copy.leave_out_all_except(spoof_type)
+        training_system.val_dataset = val_dataset_copy
+        training_system.ds_val.name = spoof_type
 
         # Train the model
         trainer.fit(training_system)
 
-        # # Calculate average metrics
+        # Calculate average metrics
         train_metrics = trainer.callback_metrics
         logger.info(train_metrics)
+        print(train_metrics)
 
         # Add the average metrics to the aggregated_metrics dictionary with the spoof type as the key
         aggregated_metrics[spoof_type] = train_metrics
-
-        # Add the average metrics to the aggregated_metrics dictionary
-        for metric, value in train_metrics.items():
-            aggregated_metrics.setdefault(metric, []).append(value)
 
     # Log the aggregated_metrics dictionary
     logger.info("-" * 60)  # Separator
@@ -174,26 +155,28 @@ def train(args: argparse.Namespace):
     # Average the aggregated_metrics dictionary
     average_metrics = {
         spoof_type: {
-            metric: torch.mean(values) for metric, values in metrics.items()
+            metric: torch.mean(values).item()
+            for metric, values in metrics.items()
         }
         for spoof_type, metrics in aggregated_metrics.items()
     }
 
-    # Average the aggregated_metrics dictionary
-    average_metrics = {
-        metric: np.mean(values)
-        for metric, values in aggregated_metrics.items()
-    }
     logger.info("-" * 60)  # Separator
     logger.info("Average Metrics")
     logger.info(average_metrics)
 
-    # Save the average metrics
-    with open("logs/stats/metrics.log", "a") as f:
-        f.write(str(aggregated_metrics) + "\n")
-    aggregated_metrics_json = json.dumps(aggregated_metrics, indent=4)
-    with open("logs/stats/metrics.json", "w") as f:
-        f.write(aggregated_metrics_json)
+    with open("logs/stats/average_metrics.json", "w") as f:
+        f.write(json.dumps(average_metrics, indent=4))
+
+    json_metrics = {}
+
+    for spoof_type, metrics in aggregated_metrics.items():
+        json_metrics[spoof_type] = {}
+        for metric_name, metric_value in metrics.items():
+            json_metrics[spoof_type][metric_name] = metric_value.item()
+
+    with open("logs/stats/aggregated_metrics.json", "w") as f:
+        f.write(json.dumps(json_metrics, indent=4))
 
 
 if __name__ == "__main__":
