@@ -78,6 +78,7 @@ class FaceDataset(Dataset):
         self.annotations = self.annotations[
             self.annotations["spoof_type"] != spoof_type
         ]
+        self.spoof_type = spoof_type
 
     def leave_out_all_except(self, spoof_type):
         self.annotations = self.annotations[
@@ -85,3 +86,6 @@ class FaceDataset(Dataset):
             | (self.annotations["spoof_type"] == "live")
         ]
         self.spoof_type = spoof_type
+
+    def get_spoof_type(self):
+        return self.spoof_type

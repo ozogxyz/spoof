@@ -120,6 +120,8 @@ def train(args: argparse.Namespace):
             replace_sampler_ddp=False,
             benchmark=torch.backends.cudnn.benchmark,
             enable_progress_bar=False,
+            accelerator="mps",
+            devices=1,
             **params_trainer,
         )
 
@@ -129,12 +131,16 @@ def train(args: argparse.Namespace):
         # Copy and update the datasets
         train_dataset_copy = copy.deepcopy(train_dataset)
         train_dataset_copy.leave_out(spoof_type)
-        training_system.train_dataset = train_dataset_copy
+        training_system.ds_train = train_dataset_copy
+        print("Updated train_dataset:", training_system.ds_train)
+        print("Updated ds_train.name:", training_system.ds_train.name)
 
         val_dataset_copy = copy.deepcopy(val_dataset)
         val_dataset_copy.leave_out_all_except(spoof_type)
-        training_system.val_dataset = val_dataset_copy
+        training_system.ds_val = val_dataset_copy
         training_system.ds_val.name = spoof_type
+        print("Updated val_dataset:", training_system.ds_val)
+        print("Updated ds_val.name:", training_system.ds_val.name)
 
         # Train the model
         trainer.fit(training_system)
