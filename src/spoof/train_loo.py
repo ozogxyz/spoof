@@ -5,6 +5,7 @@ import logging
 import os
 
 import hydra
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import yaml
@@ -94,8 +95,8 @@ def train(args: argparse.Namespace):
     )
     checkpoint_callback = ModelCheckpoint(
         dirpath=params_trainer["default_root_dir"],
-        filename="ep{epoch:03d}_loss{train_loss:.2f}_acc{m_acc:.3f}_eer{m_eer:.3f}",
-        save_top_k=-1,
+        filename="{spoof_type}_ep{epoch:03d}_loss{train_loss:.2f}_acc{m_acc:.3f}_eer{m_eer:.3f}",
+        save_top_k=1,
         save_weights_only=False,
         auto_insert_metric_name=False,
     )
@@ -120,8 +121,6 @@ def train(args: argparse.Namespace):
             replace_sampler_ddp=False,
             benchmark=torch.backends.cudnn.benchmark,
             enable_progress_bar=False,
-            accelerator="mps",
-            devices=1,
             **params_trainer,
         )
 
@@ -160,19 +159,25 @@ def train(args: argparse.Namespace):
 
     # Average the aggregated_metrics dictionary
     average_metrics = {
-        spoof_type: {
-            metric: torch.mean(values).item()
-            for metric, values in metrics.items()
-        }
-        for spoof_type, metrics in aggregated_metrics.items()
+        metric: np.mean(
+            [
+                category.get(metric, 0)
+                for category in aggregated_metrics.values()
+            ]
+        )
+        for metric in next(iter(aggregated_metrics.values()))
     }
+
+    # Print the average values for each metric
+    for metric, average in average_metrics.items():
+        print(f"Average {metric}: {average}")
 
     logger.info("-" * 60)  # Separator
     logger.info("Average Metrics")
     logger.info(average_metrics)
 
-    with open("logs/stats/average_metrics.json", "w") as f:
-        f.write(json.dumps(average_metrics, indent=4))
+    # with open("logs/stats/average_metrics.json", "w") as f:
+    # f.write(json.dumps(average_metrics, indent=4))
 
     json_metrics = {}
 
