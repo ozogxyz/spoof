@@ -4,7 +4,7 @@
 **/outputs/
 **/.vscode/
 data/
-**/data/
+# **/data/
 **/*.pth
 # logs/**
 **/*.ckpt
