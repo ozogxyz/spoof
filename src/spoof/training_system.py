@@ -196,11 +196,6 @@ class SpoofClassificationValidator(BaseModule):
 
     def on_validation_batch_start(self, batch, batch_idx, dataloader_idx):
         self.subset = self.trainer.val_dataloaders[dataloader_idx].dataset.name
-        ds = self.trainer.val_dataloaders[dataloader_idx].dataset
-
-        print(f"Spoof type: {ds.spoof_type}")
-        print(f"Get spoof type: {ds.get_spoof_type()}")
-
         return super().on_validation_batch_start(
             batch, batch_idx, dataloader_idx
         )

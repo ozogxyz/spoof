@@ -5,6 +5,7 @@ import logging
 import os
 
 import hydra
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import yaml
@@ -63,65 +64,62 @@ def train(args: argparse.Namespace):
     file_handler = logging.FileHandler(os.path.join(output_dir, "metrics.log"))
     logger.addHandler(file_handler)
 
-    # read training config with keys 'model', 'loss' and 'data'
-    path_config_training = args.cfg_training
-    with open(path_config_training, "r") as f:
-        config_training = yaml.load(f, Loader=yaml.FullLoader)
-
-    config_training_system = config_training["training_system"]
-    # set hyper parameters
-    config_training_system["trainer_params"] = config_training[
-        "trainer_params"
-    ]
-    config_training_system["train_batch_size"] = args.batch_size
-
-    # instantiate PL training system, containing loss function, model, data and training/validation loops
-    training_system = hydra.utils.instantiate(
-        config_training_system, _recursive_=False
-    )
-
-    # prepare params for trainer class
-    params_trainer = config_training_system["trainer_params"]
-    params_trainer["max_epochs"] = args.epochs
-    params_trainer["default_root_dir"] = args.train_dir
-    if args.device is not None:
-        params_trainer["devices"] = [args.device]
-        params_trainer["accelerator"] = "gpu"
-
-    # # training callbacks, e.g. model checkpoint saving or TQDM progress bar
-    logger.info(
-        f"default checkpoint dir: {params_trainer['default_root_dir']}"
-    )
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=params_trainer["default_root_dir"],
-        filename="ep{epoch:03d}_loss{train_loss:.2f}_acc{m_acc:.3f}_eer{m_eer:.3f}",
-        save_top_k=-1,
-        save_weights_only=False,
-        auto_insert_metric_name=False,
-    )
-
-    callbacks = [checkpoint_callback]
-
-    # Get the list of unique spoof types in the training dataset
-    train_dataset = training_system.train_dataloader().dataset
-    val_dataset = training_system.val_dataloader().dataset
-
-    # Get the list of unique spoof types in the training dataset, excluding "live"
-    spoof_types = train_dataset.annotations[
-        train_dataset.annotations["spoof_type"] != "live"
-    ]["spoof_type"].unique()
-
     aggregated_metrics = {}
     # Iterate over the spoof types
     for spoof_type in spoof_types:
+        # read training config with keys 'model', 'loss' and 'data'
+        path_config_training = args.cfg_training
+        with open(path_config_training, "r") as f:
+            config_training = yaml.load(f, Loader=yaml.FullLoader)
+
+        config_training_system = config_training["training_system"]
+        # set hyper parameters
+        config_training_system["trainer_params"] = config_training[
+            "trainer_params"
+        ]
+        config_training_system["train_batch_size"] = args.batch_size
+
+        # instantiate PL training system, containing loss function, model, data and training/validation loops
+        training_system = hydra.utils.instantiate(
+            config_training_system, _recursive_=False
+        )
+
+        # prepare params for trainer class
+        params_trainer = config_training_system["trainer_params"]
+        params_trainer["max_epochs"] = args.epochs
+        params_trainer["default_root_dir"] = args.train_dir
+        if args.device is not None:
+            params_trainer["devices"] = [args.device]
+            params_trainer["accelerator"] = "gpu"
+
+        # # training callbacks, e.g. model checkpoint saving or TQDM progress bar
+        logger.info(
+            f"default checkpoint dir: {params_trainer['default_root_dir']}"
+        )
+        checkpoint_callback = ModelCheckpoint(
+            dirpath=params_trainer["default_root_dir"],
+            filename="{spoof_type}_ep{epoch:03d}_loss{train_loss:.2f}_acc{m_acc:.3f}_eer{m_eer:.3f}",
+            save_top_k=1,
+            save_weights_only=False,
+            auto_insert_metric_name=False,
+        )
+
+        callbacks = [checkpoint_callback]
+
+        # Get the list of unique spoof types in the training dataset
+        train_dataset = training_system.train_dataloader().dataset
+        val_dataset = training_system.val_dataloader().dataset
+
+        # Get the list of unique spoof types in the training dataset, excluding "live"
+        spoof_types = train_dataset.annotations[
+            train_dataset.annotations["spoof_type"] != "live"
+        ]["spoof_type"].unique()
         trainer = pl.Trainer(
             logger=True,
             callbacks=callbacks,
             replace_sampler_ddp=False,
             benchmark=torch.backends.cudnn.benchmark,
             enable_progress_bar=False,
-            accelerator="mps",
-            devices=1,
             **params_trainer,
         )
 
@@ -160,19 +158,25 @@ def train(args: argparse.Namespace):
 
     # Average the aggregated_metrics dictionary
     average_metrics = {
-        spoof_type: {
-            metric: torch.mean(values).item()
-            for metric, values in metrics.items()
-        }
-        for spoof_type, metrics in aggregated_metrics.items()
+        metric: np.mean(
+            [
+                category.get(metric, 0)
+                for category in aggregated_metrics.values()
+            ]
+        )
+        for metric in next(iter(aggregated_metrics.values()))
     }
+
+    # Print the average values for each metric
+    for metric, average in average_metrics.items():
+        print(f"Average {metric}: {average}")
 
     logger.info("-" * 60)  # Separator
     logger.info("Average Metrics")
     logger.info(average_metrics)
 
-    with open("logs/stats/average_metrics.json", "w") as f:
-        f.write(json.dumps(average_metrics, indent=4))
+    # with open("logs/stats/average_metrics.json", "w") as f:
+    # f.write(json.dumps(average_metrics, indent=4))
 
     json_metrics = {}
 
