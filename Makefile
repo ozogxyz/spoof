@@ -14,4 +14,4 @@ eval:
 	python src/spoof/validate.py --ckpt=logs/ep004_loss0.00_acc1.000_eer0.000.ckpt --device=3 --config-data=config/test.yaml
 
 train:
-	python src/spoof/train.py --device=3 --cfg-training=config/train.yaml -e=5
+	python src/spoof/train.py --cfg-training=config/train.yaml -e=1 --device=5

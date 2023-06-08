@@ -16,7 +16,6 @@ repos:
       - id: check-toml
       - id: check-case-conflict
       # - id: check-added-large-files
-      # - id: check-builtin-literals
 
   # python code formatting
   - repo: https://github.com/psf/black
@@ -25,32 +24,6 @@ repos:
       - id: black
         args: [--line-length, "79"]
 
-  # # python docstring formatting
-  # - repo: https://github.com/myint/docformatter
-  #   rev: v1.4
-  #   hooks:
-  #     - id: docformatter
-  #       args: [--in-place, --wrap-summaries=99, --wrap-descriptions=99]
-
-  # python check (PEP8), programming errors and code complexity
-  # - repo: https://github.com/PyCQA/flake8
-  #   rev: 4.0.1
-  #   hooks:
-  #     - id: flake8
-  #       args:
-  #         [
-  #           "--extend-ignore",
-  #           "E203,E402,E501,F401,F841",
-  #           "--exclude",
-  #           "logs/*,data/*",
-  #         ]
-
-  # yaml formatting
-  # - repo: https://github.com/pre-commit/mirrors-prettier
-  #   rev: v2.7.1
-  #   hooks:
-  #     - id: prettier
-  #       types: [yaml]
 
   # md formatting
   - repo: https://github.com/executablebooks/mdformat
@@ -73,3 +46,25 @@ repos:
         args:
           - --skip=logs/**,data/**,*.ipynb
           - --ignore-words-list=abc,def,fpr
+
+
+  # jupyter notebook cell output clearing
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.5.0
+    hooks:
+      - id: nbstripout
+
+  # jupyter notebook linting
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.4.0
+    hooks:
+      - id: nbqa-black
+        args: ["--line-length=99"]
+      - id: nbqa-isort
+        args: ["--profile=black"]
+      - id: nbqa-flake8
+        args:
+          [
+            "--extend-ignore=E203,E402,E501,F401,F841",
+            "--exclude=logs/*,data/*",
+          ]

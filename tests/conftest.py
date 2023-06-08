@@ -9,13 +9,7 @@ def config_training():
         return config_training["training_system"]
 
 
-# @pytest.fixture(scope="module")
-# def config_val():
-#     with open("config/validate.yaml", "r") as f:
-#         return yaml.load(f, Loader=yaml.FullLoader)
-
-
-# @pytest.fixture(scope="module")
-# def config_test():
-#     with open("config/test.yaml", "r") as f:
-#         return yaml.load(f, Loader=yaml.FullLoader)
+@pytest.fixture(scope="module")
+def config_test():
+    with open("config/test.yaml", "r") as f:
+        return yaml.load(f, Loader=yaml.FullLoader)

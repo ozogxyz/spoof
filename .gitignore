@@ -4,11 +4,12 @@
 **/outputs/
 **/.vscode/
 data/
-**/data/
+# **/data/
 **/*.pth
 # logs/**
 **/*.ckpt
-logs/lightning_logs
+logs/**/lightning_logs
+logs/lcc2siwm/lightning_logs
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

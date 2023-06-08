@@ -87,7 +87,7 @@ def train(args: argparse.Namespace):
     checkpoint_callback = ModelCheckpoint(
         dirpath=params_trainer["default_root_dir"],
         filename="ep{epoch:03d}_loss{train_loss:.2f}_acc{m_acc:.3f}_eer{m_eer:.3f}",
-        save_top_k=-1,
+        save_top_k=1,
         save_weights_only=False,
         auto_insert_metric_name=False,
     )
