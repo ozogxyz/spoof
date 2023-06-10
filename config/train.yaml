@@ -29,10 +29,12 @@ training_system:
     train:
       _target_: spoof.dataset.FaceDataset
       annotations_file: ${oc.env:HOME}/spoof/data/lcc/train/annotations.csv
+      mode: train
 
     val_base:
       _target_: spoof.dataset.FaceDataset
       annotations_file: ${oc.env:HOME}/spoof/data/lcc/test/annotations.csv
+      mode: val
 
 trainer_params:
   max_epochs: 5
