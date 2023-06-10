@@ -19,8 +19,9 @@ def adjust_brightness(src, brightness_factor):
     Returns:
         numpy ndarray: Brightness adjusted image.
     """
-    dst = np.array(TVF.adjust_brightness(
-        Image.fromarray(src), brightness_factor))
+    dst = np.array(
+        TVF.adjust_brightness(Image.fromarray(src), brightness_factor)
+    )
     return dst
 
 
@@ -207,17 +208,38 @@ class ColorJitterCV:
         sharpness in (-inf, inf)
     """
 
-    def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, gamma=0, temp=0, p=0.75, tags=("image",)):
-
-        self.brightness = brightness if self.check_param(
-            brightness) else [max(0, 1 - brightness), 1 + brightness]
-        self.contrast = contrast if self.check_param(
-            contrast) else [max(0, 1 - contrast), 1 + contrast]
-        self.saturation = saturation if self.check_param(
-            saturation) else [-saturation, saturation]
+    def __init__(
+        self,
+        brightness=0,
+        contrast=0,
+        saturation=0,
+        hue=0,
+        gamma=0,
+        # gain=0,
+        temp=0,
+        p=0.75,
+        tags=("image",),
+    ):
+        self.brightness = (
+            brightness
+            if self.check_param(brightness)
+            else [max(0, 1 - brightness), 1 + brightness]
+        )
+        self.contrast = (
+            contrast
+            if self.check_param(contrast)
+            else [max(0, 1 - contrast), 1 + contrast]
+        )
+        self.saturation = (
+            saturation
+            if self.check_param(saturation)
+            else [-saturation, saturation]
+        )
         self.hue = hue if self.check_param(hue) else [-hue, hue]
-        self.gamma = gamma if self.check_param(
-            gamma) else [1 - gamma, 1 + gamma]
+        self.gamma = (
+            gamma if self.check_param(gamma) else [1 - gamma, 1 + gamma]
+        )
+        # self.gain = gain if self.check_param(gain) else [1 - gain, 1 + gain]
         self.temp = temp if self.check_param(temp) else [-temp, temp]
 
         # Proper interval clippings:
@@ -225,6 +247,7 @@ class ColorJitterCV:
         self.contrast = np.clip(self.contrast, 0, None)
         self.hue = np.clip(self.hue, -0.5, 0.5)
         self.gamma = np.clip(self.gamma, 0.5, 1.5)
+        # self.gain = np.clip(self.gain, 0.5, 1.5)
         self.temp = np.clip(self.temp, -1, 1)
 
         # helper parameters
@@ -242,6 +265,7 @@ class ColorJitterCV:
         format_string += f"saturation={self.saturation},"
         format_string += f"hue={self.hue},"
         format_string += f"gamma={self.gamma},"
+        # format_string += f"gain={self.gain},"
         format_string += f"temp={self.temp}"
         format_string += ")"
         return format_string
@@ -261,10 +285,16 @@ class ColorJitterCV:
         gamma_factor = 1
         if not np.allclose(gamma, 1):
             gain_factor = 1
-            gamma_factor = np.clip(random.uniform(
-                gamma[0], gamma[1]), 0.5, 1.5)
-            transforms.append(Lambda(lambda img: pp.adjust_gamma(
-                np.array(img), gamma_factor, gain_factor)))
+            gamma_factor = np.clip(
+                random.uniform(gamma[0], gamma[1]), 0.5, 1.5
+            )
+            transforms.append(
+                Lambda(
+                    lambda img: adjust_gamma(
+                        np.array(img), gamma_factor, gain_factor
+                    )
+                )
+            )
         if not np.allclose(brightness, 1):
             if gamma_factor < 1 and brightness[1] > 1:
                 brightness_factor = random.uniform(1, brightness[1])
@@ -272,29 +302,34 @@ class ColorJitterCV:
                 brightness_factor = random.uniform(brightness[0], 1)
             elif gamma_factor == 1:
                 brightness_factor = random.uniform(
-                    brightness[0], brightness[1])
+                    brightness[0], brightness[1]
+                )
             else:
                 brightness_factor = 1
             transforms.append(
-                Lambda(lambda img: adjust_brightness(img, brightness_factor)))
+                Lambda(lambda img: adjust_brightness(img, brightness_factor))
+            )
 
         if not np.allclose(contrast, 1):
             contrast_factor = random.uniform(contrast[0], contrast[1])
             transforms.append(
-                Lambda(lambda img: adjust_contrast(img, contrast_factor)))
+                Lambda(lambda img: adjust_contrast(img, contrast_factor))
+            )
         if not np.allclose(saturation, 0):
             saturation_factor = random.uniform(saturation[0], saturation[1])
             transforms.append(
-                Lambda(lambda img: adjust_saturation(img, saturation_factor)))
+                Lambda(lambda img: adjust_saturation(img, saturation_factor))
+            )
         if not np.allclose(temp, 0):
             temp_factor = random.uniform(temp[0], temp[1])
             transforms.append(
-                Lambda(lambda img: adjust_temperature(img, temp_factor)))
+                Lambda(lambda img: adjust_temperature(img, temp_factor))
+            )
         if not np.allclose(hue, 1):
             hue_factor = float(
-                np.clip(random.uniform(hue[0], hue[1]), -0.5, 0.5))
-            transforms.append(
-                Lambda(lambda img: adjust_hue(img, hue_factor)))
+                np.clip(random.uniform(hue[0], hue[1]), -0.5, 0.5)
+            )
+            transforms.append(Lambda(lambda img: adjust_hue(img, hue_factor)))
 
         random.shuffle(transforms)
         transform = TorchvisionCompose(transforms)
@@ -302,8 +337,16 @@ class ColorJitterCV:
         return transform
 
     def __call__(self, sample_dict):
-        transform_func = self.get_params(self.brightness, self.contrast, self.saturation, self.hue,
-                                         self.gamma, self.gain, self.temp, self.sharpness)
+        transform_func = self.get_params(
+            self.brightness,
+            self.contrast,
+            self.saturation,
+            self.hue,
+            self.gamma,
+            # self.gain,
+            self.temp,
+            # self.sharpness,
+        )
         if np.random.random() < self.p:
             for tag in self.tags:
                 sample_dict[tag] = transform_func(sample_dict[tag].squeeze())
@@ -323,13 +366,17 @@ class RandomGaussianBlur:
     def __init__(
         self,
         radius=(1, 3),
-        tags=("image", ),
+        tags=("image",),
         p=0.5,
     ):
         self.p = p
         self.tags = tags
-        assert type(radius) is tuple and len(radius) == 2 or type(
-            radius) is int and radius > 1, 'Wrong input: radius'
+        assert (
+            type(radius) is tuple
+            and len(radius) == 2
+            or type(radius) is int
+            and radius > 1
+        ), "Wrong input: radius"
 
         if isinstance(radius, float):
             self.radius = (1, radius)
@@ -338,11 +385,14 @@ class RandomGaussianBlur:
 
     def get_params(self):
         return {
-            "sigmaX": self.radius[0] + random.random() * (self.radius[1] - self.radius[1])
+            "sigmaX": self.radius[0]
+            + random.random() * (self.radius[1] - self.radius[1])
         }
 
     def __repr__(self):
-        format_string = f"{self.__class__.__name__}(p={self.p}, radius={self.radius}"
+        format_string = (
+            f"{self.__class__.__name__}(p={self.p}, radius={self.radius}"
+        )
         return format_string
 
     def __call__(self, sample_dict):
@@ -350,5 +400,6 @@ class RandomGaussianBlur:
         if random.random() > self.p:
             for tag in self.tags:
                 sample_dict[tag] = cv2.GaussianBlur(
-                    sample_dict[tag].copy(), None, **params)
+                    sample_dict[tag].copy(), None, **params
+                )
         return sample_dict
