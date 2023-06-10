@@ -42,9 +42,12 @@ def show_frame(frame, title: str = "frame"):
     cv2.destroyAllWindows()
 
 
-def print_scores_on_tensor(tensor: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor = None) -> torch.Tensor:
+def print_scores_on_tensor(
+    tensor: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor = None
+) -> torch.Tensor:
     np_ten = np.uint8(
-        255 * tensor.detach().cpu().numpy().transpose(0, 2, 3, 1))
+        255 * tensor.detach().cpu().numpy().transpose(0, 2, 3, 1)
+    )
     img_list = list(np_ten)
     if labels is None:
         labels = torch.ones_like(scores.detach().cpu())
@@ -58,10 +61,21 @@ def print_scores_on_tensor(tensor: torch.Tensor, scores: torch.Tensor, labels: t
         condition = (sc > 0) == (lbl > 0)
         # print(f"score: {sc:.2f} | label: {lbl} | {'RED' if condition else 'GREEN'}")
         color = (0, 0, 255) if condition else (0, 255, 0)
-        im[:h//4] = np.uint8(np.clip(np.int32(im)[:h//4] - 100, 0, 255))
-        res_list.append(cv2.putText(
-            cv2.UMat(im), f"{sc:.4f}", (10, h // 4), font, 1, color, 1, cv2.LINE_AA).get())
+        im[: h // 4] = np.uint8(np.clip(np.int32(im)[: h // 4] - 100, 0, 255))
+        res_list.append(
+            cv2.putText(
+                cv2.UMat(im),
+                f"{sc:.4f}",
+                (10, h // 4),
+                font,
+                1,
+                color,
+                1,
+                cv2.LINE_AA,
+            ).get()
+        )
 
     np_result = np.array(
-        [np.float32(im).transpose(2, 0, 1) / 255. for im in res_list])
+        [np.float32(im).transpose(2, 0, 1) / 255.0 for im in res_list]
+    )
     return torch.from_numpy(np_result).to(tensor.device, non_blocking=True)

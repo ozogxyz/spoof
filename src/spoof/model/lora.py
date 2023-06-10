@@ -46,7 +46,9 @@ class LoRA_ViT(nn.Module):
         torch.Size([1, 1000])
     """
 
-    def __init__(self, vit_model: ViT, r: int, num_classes: int = 0, lora_layer=None):
+    def __init__(
+        self, vit_model: ViT, r: int, num_classes: int = 0, lora_layer=None
+    ):
         super(LoRA_ViT, self).__init__()
 
         assert r > 0
@@ -80,9 +82,11 @@ class LoRA_ViT(nn.Module):
             self.w_As.append(w_a_linear_v)
             self.w_Bs.append(w_b_linear_v)
             blk.attn.proj_q = _LoRALayer(
-                w_q_linear, w_a_linear_q, w_b_linear_q)
+                w_q_linear, w_a_linear_q, w_b_linear_q
+            )
             blk.attn.proj_v = _LoRALayer(
-                w_v_linear, w_a_linear_v, w_b_linear_v)
+                w_v_linear, w_a_linear_v, w_b_linear_v
+            )
 
         self.reset_parameters()
         self.lora_vit = vit_model
