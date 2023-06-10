@@ -1,3 +1,4 @@
 test:
   _target_: spoof.dataset.FaceDataset
-  annotations_file: ${oc.env:HOME}/spoof/data/lcc/test/annotations.csv
+  annotations_file: ${oc.env:HOME}/spoof/data/siwm/test_annotations.csv
+  mode: test

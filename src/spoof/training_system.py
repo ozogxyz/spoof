@@ -290,8 +290,13 @@ class SpoofClassificationSystem(SpoofClassificationValidator):
         # TODO: let's hardcode Adam optimizer for simplicity and pass only learning rate and weight decay?
         learning_rate = self.hparams.lr
         weight_decay = getattr(self.hparams, "weight_decay", 0.0)
-        self.optimizer = optim.Adam(
-            params=self.model.parameters(),
+        # self.optimizer = optim.Adam(
+        #     params=self.model.parameters(),
+        #     lr=learning_rate,
+        #     weight_decay=weight_decay,
+        # )
+        self.optimizer = optim.AdamW(
+            filter(lambda p: p.requires_grad, self.model.parameters()),
             lr=learning_rate,
             weight_decay=weight_decay,
         )
