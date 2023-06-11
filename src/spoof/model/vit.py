@@ -79,7 +79,7 @@ class BaseViT(nn.Module):
         self.plot_images_with_scores(logger_experiment, step, dict_all)
 
 
-class ViT(nn.Module):
+class VitNet(nn.Module):
     def __init__(
         self,
         num_classes: int = 1,
