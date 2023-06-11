@@ -6,7 +6,7 @@ import yaml
 def config_training():
     with open("config/train.yaml", "r") as f:
         config_training = yaml.load(f, Loader=yaml.FullLoader)
-        return config_training["training_system"]
+        return config_training
 
 
 @pytest.fixture(scope="module")

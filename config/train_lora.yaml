@@ -13,8 +13,8 @@ training_system:
 
   model:
     _target_: spoof.model.LVNetVitLora
-    dim_embedding: 768
     num_classes: 1
+    rank: 4
 
   loss:
     _target_: spoof.loss.MultiLoss
