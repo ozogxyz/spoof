@@ -12,9 +12,9 @@ training_system:
 
 
   model:
-    _target_: spoof.model.ViT
-    dim_embedding: 768
+    _target_: spoof.model.vit.LVNetVitLora
     num_classes: 1
+    rank: 4
 
   loss:
     _target_: spoof.loss.MultiLoss
@@ -28,12 +28,12 @@ training_system:
   data:
     train:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/lcc/train/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/siwm/train_live_paper_replay.csv
       mode: train
 
     val_base:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/lcc/test/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/siwm/test_live_paper_replay.csv
       mode: val
 
 trainer_params:
