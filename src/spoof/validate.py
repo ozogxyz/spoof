@@ -91,6 +91,7 @@ def validate(args):
         "default_root_dir": output_dir,
         "gpus": [args.device] if args.device >= 0 else -1,
         "log_every_n_steps": 10,
+        "accelerator": "mps",
     }
     params = {
         "model": model_config,

@@ -22,13 +22,13 @@ training_system:
       - 1.0
       - _target_: spoof.loss.ClassifierBinary
         name: bce
-        tag_pred: out_logit
+        tag_pred: out_sigmoid
         tag_gt: label
 
   data:
     train:
       _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/lcc/train/annotations.csv
+      annotations_file: ${oc.env:HOME}/spoof/data/siwm/train_live_paper_replay.csv
       mode: train
 
     val_base:

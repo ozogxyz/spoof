@@ -101,6 +101,7 @@ def train(args: argparse.Namespace):
         replace_sampler_ddp=False,
         benchmark=torch.backends.cudnn.benchmark,
         enable_progress_bar=False,
+        accelerator="mps",
         **params_trainer,
     )
 

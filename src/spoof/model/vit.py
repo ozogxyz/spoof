@@ -5,7 +5,7 @@ from torchvision.utils import make_grid
 
 # NOTE: name confusion for your model and pretrained model ViT
 from .lora import LoRA_ViT, ViT as pretrained_ViT
-from src.spoof.utils.visualize import print_scores_on_tensor
+from ..utils.visualize import print_scores_on_tensor
 
 # TODO try HTER
 # TODO try HTER low res casia vga
@@ -139,8 +139,8 @@ class LVNetVitLora(BaseViT):
         super().__init__()
 
         # better keep track of model normalization parameters
-        input_mean = (0.485, 0.456, 0.406)
-        input_std = (0.229, 0.224, 0.225)
+        input_mean = (0.5, 0.5, 0.5)  # (0.485, 0.456, 0.406)
+        input_std = (0.5, 0.5, 0.5)  # (0.229, 0.224, 0.225)
         self.register_buffer(
             "input_mean", torch.Tensor(input_mean)[None, :, None, None]
         )
