@@ -1,3 +1,4 @@
+from copy import deepcopy
 import logging
 
 import cv2
@@ -19,28 +20,22 @@ logger.setLevel(logging.INFO)
 def align(sample):
     return Compose(
         [
-            FaceRegionRCXT(size=(224, 224)),
             MetaAddLMSquare(),
+            FaceRegionRCXT(size=(224, 224)),
         ]
     )(sample)
 
 
 def augment(sample):
-    # Apply ColorJitterCV
-    color_jitter = ColorJitterCV(
-        brightness=0.8, contrast=0.1, gamma=0.2, temp=0.8, p=0.75
-    )
-    sample = color_jitter(sample)
-
-    # Apply RandomGaussianBlur
-    blur = RandomGaussianBlur()
-    sample = blur(sample)
-
-    # Apply RandomHorizontalFlip
-    flip = RandomHorizontalFlip()
-    sample = flip(sample)
-
-    return sample
+    return Compose(
+        [
+            ColorJitterCV(
+                brightness=0.8, contrast=0.1, gamma=0.2, temp=0.8, p=0.75
+            ),
+            RandomGaussianBlur(),
+            RandomHorizontalFlip(),
+        ]
+    )(sample)
 
 
 class FaceDataset(Dataset):
@@ -60,6 +55,10 @@ class FaceDataset(Dataset):
             sample = augment(sample)
 
         sample = self._normalize(sample)
+
+        # delete meta because dataloader can't handle it (dtype=object)
+        sample = deepcopy(sample)
+        del sample["meta"]
 
         return sample
 
@@ -85,7 +84,6 @@ class FaceDataset(Dataset):
         img = img.transpose(2, 0, 1)  # Convert to (C, H, W) format
         img = torch.from_numpy(img).float() / 255.0  # Convert to torch tensor
         img = torch.clamp(img, 0.0, 1.0)  # Clamp values to [0, 1]
-
         sample["image"] = img
 
         return sample
@@ -101,13 +99,13 @@ class FaceDatasetLeaveOneOut(FaceDataset):
         super(FaceDatasetLeaveOneOut, self).__init__(annotations_file, mode)
         self.spoof_type = spoof_type
 
-        if spoof_type is not None:
-            self._leave_out_spoof_type()
+        # if spoof_type is not None:
+        #     self._leave_out_spoof_type()
 
-    def _leave_out_spoof_type(self):
+    def leave_out(self, spoof_type):
         if self.spoof_type is not None:
             self.annotations = self.annotations[
-                self.annotations["spoof_type"] != self.spoof_type
+                self.annotations["spoof_type"] != spoof_type
             ]
 
     def leave_out_all_except(self, spoof_type):

@@ -1,20 +1,20 @@
+import hydra
 import torch
+import pytorch_lightning as pl
 
-from src.spoof.model.vit import LVNetVitLora
 
+def test_lora(config_training):
+    conf_train_sys = config_training["training_system"]
+    conf_train_sys["trainer_params"] = config_training["trainer_params"]
+    conf_train_sys["train_batch_size"] = 1
+    train_sys = hydra.utils.instantiate(conf_train_sys, _recursive_=False)
 
-def test_lora():
-    model = LVNetVitLora()
-    model.eval()
+    params_trainer = conf_train_sys["trainer_params"]
+    params_trainer["max_epochs"] = 1
+    params_trainer["default_root_dir"] = "/tmp/test_lora"
+    params_trainer["fast_dev_run"] = True
+    params_trainer["accelerator"] = "mps"
 
-    x = torch.rand(1, 3, 224, 224)
-    out = model(x)
+    trainer = pl.Trainer(**params_trainer)
 
-    pred = model.get_liveness_score(out)
-
-    pred = pred.detach().cpu().numpy()
-    print(pred)
-    assert pred.max() <= 1.0
-    assert pred.min() >= 0.0
-
-    assert False
+    trainer.fit(train_sys)

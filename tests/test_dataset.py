@@ -5,36 +5,20 @@ import torch
 
 
 def test_ds_train(config_training):
-    train_ds = hydra.utils.instantiate(
-        config_training["data"]["train"], _recursive_=False
-    )
+    conf_train_sys = config_training["training_system"]
+    train_sys = hydra.utils.instantiate(conf_train_sys, _recursive_=False)
+    train_ds = train_sys.train_dataloader().dataset
 
-    img = train_ds[0]["image"]
-    assert img.shape == (3, 224, 224)
-    assert img.dtype == torch.float32
-    assert img.max() <= 1
-    assert img.min() >= 0
+    sample = train_ds[0]
+    assert sample["image"].shape == (3, 224, 224)
+    assert sample["image"].dtype == torch.float32
+    assert sample["image"].max() <= 1
+    assert sample["image"].min() >= 0
 
-    label = train_ds[0]["label"]
-    assert label == 0 or label == 1
+    assert sample["label"] == 0 or sample["label"] == 1
 
-    filename = train_ds[0]["filename"]
-    assert os.path.exists(filename)
+    x = sample["image"]
+    log_str = f"Tensor range: [{x.min().cpu().item():.4f}, {x.max().cpu().item():.4f}]"
+    print(log_str, flush=True)
 
-
-def test_ds_val(config_training):
-    val_ds = hydra.utils.instantiate(
-        config_training["data"]["val_base"], _recursive_=False
-    )
-
-    img = val_ds[0]["image"]
-    assert img.shape == (3, 224, 224)
-    assert img.dtype == torch.float32
-    assert img.max() <= 1
-    assert img.min() >= 0
-
-    label = val_ds[0]["label"]
-    assert label == 0 or label == 1
-
-    filename = val_ds[0]["filename"]
-    assert os.path.exists(filename)
+    assert False

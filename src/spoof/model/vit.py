@@ -5,7 +5,7 @@ from torchvision.utils import make_grid
 
 # NOTE: name confusion for your model and pretrained model ViT
 from .lora import LoRA_ViT, ViT as pretrained_ViT
-from src.spoof.utils.visualize import print_scores_on_tensor
+from ..utils.visualize import print_scores_on_tensor
 
 # TODO try HTER
 # TODO try HTER low res casia vga
@@ -139,8 +139,8 @@ class LVNetVitLora(BaseViT):
         super().__init__()
 
         # better keep track of model normalization parameters
-        input_mean = (0.485, 0.456, 0.406)
-        input_std = (0.229, 0.224, 0.225)
+        input_mean = (0.5, 0.5, 0.5)  # (0.485, 0.456, 0.406)
+        input_std = (0.5, 0.5, 0.5)  # (0.229, 0.224, 0.225)
         self.register_buffer(
             "input_mean", torch.Tensor(input_mean)[None, :, None, None]
         )
@@ -155,7 +155,7 @@ class LVNetVitLora(BaseViT):
         self.extractor = LoRA_ViT(extractor, r=rank, num_classes=num_classes)
 
     def get_liveness_score(self, out_dict):
-        out_logit = out_dict["out_sigmoid"]
+        out_logit = out_dict["out_logit"]
         return torch.sigmoid(out_logit)[:, 0]
 
     def forward(self, in_tensor):
@@ -170,4 +170,4 @@ class LVNetVitLora(BaseViT):
         # generate output logits for scores
         # logits = self.flatten(logits)
         logits = torch.flatten(logits, start_dim=1)
-        return {"out_sigmoid": logits}
+        return {"out_logit": logits}

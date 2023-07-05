@@ -62,18 +62,23 @@ def print_scores_on_tensor(
         # print(f"score: {sc:.2f} | label: {lbl} | {'RED' if condition else 'GREEN'}")
         color = (0, 0, 255) if condition else (0, 255, 0)
         im[: h // 4] = np.uint8(np.clip(np.int32(im)[: h // 4] - 100, 0, 255))
-        res_list.append(
-            cv2.putText(
-                cv2.UMat(im),
-                f"{sc:.4f}",
-                (10, h // 4),
-                font,
-                1,
-                color,
-                1,
-                cv2.LINE_AA,
-            ).get()
+        # res_list.append(
+        #     cv2.putText(
+        #         cv2.UMat(im),
+        #         f"{sc:.4f}",
+        #         (10, h // 4),
+        #         font,
+        #         1,
+        #         color,
+        #         1,
+        #         cv2.LINE_AA,
+        #     ).get()
+        # )
+        text = f"{sc:.4f}"
+        dst = cv2.putText(
+            im.copy(), text, (10, h // 4), font, 1, color, 1, cv2.LINE_AA
         )
+        res_list.append(dst)
 
     np_result = np.array(
         [np.float32(im).transpose(2, 0, 1) / 255.0 for im in res_list]
