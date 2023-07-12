@@ -1,5 +1,6 @@
 import hydra
 import pytorch_lightning as pl
+import torch
 
 
 def test_lora(config_training):

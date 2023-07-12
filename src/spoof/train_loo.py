@@ -64,56 +64,56 @@ def train(args: argparse.Namespace):
     file_handler = logging.FileHandler(os.path.join(output_dir, "metrics.log"))
     logger.addHandler(file_handler)
 
-    aggregated_metrics = {}
     # Iterate over the spoof types
+    # read training config with keys 'model', 'loss' and 'data'
+    path_config_training = args.cfg_training
+    with open(path_config_training, "r") as f:
+        config_training = yaml.load(f, Loader=yaml.FullLoader)
+
+    config_training_system = config_training["training_system"]
+    # set hyper parameters
+    config_training_system["trainer_params"] = config_training[
+        "trainer_params"
+    ]
+    config_training_system["train_batch_size"] = args.batch_size
+
+    # instantiate PL training system, containing loss function, model, data and training/validation loops
+    training_system = hydra.utils.instantiate(
+        config_training_system, _recursive_=False
+    )
+
+    # prepare params for trainer class
+    params_trainer = config_training_system["trainer_params"]
+    params_trainer["max_epochs"] = args.epochs
+    params_trainer["default_root_dir"] = args.train_dir
+    if args.device is not None:
+        params_trainer["devices"] = [args.device]
+        params_trainer["accelerator"] = "gpu"
+
+    # # training callbacks, e.g. model checkpoint saving or TQDM progress bar
+    logger.info(
+        f"default checkpoint dir: {params_trainer['default_root_dir']}"
+    )
+
+    # Get the list of unique spoof types in the training dataset
+    train_dataset = training_system.train_dataloader().dataset
+    val_dataset = training_system.val_dataloader().dataset
+    spoof_types = train_dataset.annotations[
+        train_dataset.annotations["spoof_type"] != "live"
+    ]["spoof_type"].unique()
+
+    # Get the list of unique spoof types in the training dataset, excluding "live"
+    aggregated_metrics = {}
     for spoof_type in spoof_types:
-        # read training config with keys 'model', 'loss' and 'data'
-        path_config_training = args.cfg_training
-        with open(path_config_training, "r") as f:
-            config_training = yaml.load(f, Loader=yaml.FullLoader)
-
-        config_training_system = config_training["training_system"]
-        # set hyper parameters
-        config_training_system["trainer_params"] = config_training[
-            "trainer_params"
-        ]
-        config_training_system["train_batch_size"] = args.batch_size
-
-        # instantiate PL training system, containing loss function, model, data and training/validation loops
-        training_system = hydra.utils.instantiate(
-            config_training_system, _recursive_=False
-        )
-
-        # prepare params for trainer class
-        params_trainer = config_training_system["trainer_params"]
-        params_trainer["max_epochs"] = args.epochs
-        params_trainer["default_root_dir"] = args.train_dir
-        if args.device is not None:
-            params_trainer["devices"] = [args.device]
-            params_trainer["accelerator"] = "gpu"
-
-        # # training callbacks, e.g. model checkpoint saving or TQDM progress bar
-        logger.info(
-            f"default checkpoint dir: {params_trainer['default_root_dir']}"
-        )
         checkpoint_callback = ModelCheckpoint(
             dirpath=params_trainer["default_root_dir"],
-            filename="{spoof_type}_ep{epoch:03d}_loss{train_loss:.2f}_acc{m_acc:.3f}_eer{m_eer:.3f}",
+            filename="{epoch:03d}_loss{train_loss:.2f}_acc{m_acc:.3f}_eer{m_eer:.3f}",
             save_top_k=1,
             save_weights_only=False,
             auto_insert_metric_name=False,
         )
 
         callbacks = [checkpoint_callback]
-
-        # Get the list of unique spoof types in the training dataset
-        train_dataset = training_system.train_dataloader().dataset
-        val_dataset = training_system.val_dataloader().dataset
-
-        # Get the list of unique spoof types in the training dataset, excluding "live"
-        spoof_types = train_dataset.annotations[
-            train_dataset.annotations["spoof_type"] != "live"
-        ]["spoof_type"].unique()
         trainer = pl.Trainer(
             logger=True,
             callbacks=callbacks,

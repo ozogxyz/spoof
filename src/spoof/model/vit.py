@@ -155,7 +155,7 @@ class LVNetVitLora(BaseViT):
         self.extractor = LoRA_ViT(extractor, r=rank, num_classes=num_classes)
 
     def get_liveness_score(self, out_dict):
-        out_logit = out_dict["out_sigmoid"]
+        out_logit = out_dict["out_logit"]
         return torch.sigmoid(out_logit)[:, 0]
 
     def forward(self, in_tensor):
@@ -170,4 +170,4 @@ class LVNetVitLora(BaseViT):
         # generate output logits for scores
         # logits = self.flatten(logits)
         logits = torch.flatten(logits, start_dim=1)
-        return {"out_sigmoid": logits}
+        return {"out_logit": logits}

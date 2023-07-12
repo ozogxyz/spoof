@@ -99,13 +99,13 @@ class FaceDatasetLeaveOneOut(FaceDataset):
         super(FaceDatasetLeaveOneOut, self).__init__(annotations_file, mode)
         self.spoof_type = spoof_type
 
-        if spoof_type is not None:
-            self._leave_out_spoof_type()
+        # if spoof_type is not None:
+        #     self._leave_out_spoof_type()
 
-    def _leave_out_spoof_type(self):
+    def leave_out(self, spoof_type):
         if self.spoof_type is not None:
             self.annotations = self.annotations[
-                self.annotations["spoof_type"] != self.spoof_type
+                self.annotations["spoof_type"] != spoof_type
             ]
 
     def leave_out_all_except(self, spoof_type):

@@ -27,13 +27,13 @@ training_system:
 
   data:
     train:
-      _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/siwm/train_live_paper_replay.csv
+      _target_: spoof.dataset.FaceDatasetLeaveOneOut
+      annotations_file: ${oc.env:HOME}/spoof/data/siwm/train_annotations.csv
       mode: train
 
     val_base:
-      _target_: spoof.dataset.FaceDataset
-      annotations_file: ${oc.env:HOME}/spoof/data/siwm/test_live_paper_replay.csv
+      _target_: spoof.dataset.FaceDatasetLeaveOneOut
+      annotations_file: ${oc.env:HOME}/spoof/data/siwm/test_annotations.csv
       mode: val
 
 trainer_params:
