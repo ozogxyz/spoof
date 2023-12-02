@@ -1,4 +1,0 @@
-test:
-  _target_: spoof.dataset.FaceDatasetLeaveOneOut
-  annotations_file: ${oc.env:HOME}/spoof/data/siwm/test_annotations.csv
-  mode: test
