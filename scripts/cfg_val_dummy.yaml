@@ -1,0 +1,4 @@
+val_base:
+  _target_: spoof.dataset.DummyDataset
+  num_samples: 128
+  image_size: 128

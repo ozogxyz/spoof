@@ -1,0 +1,4 @@
+test:
+  _target_: spoof.dataset.FaceDataset
+  annotations_file: ${oc.env:HOME}/spoof/data/siwm/test_live_paper_replay.csv
+  mode: test

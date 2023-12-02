@@ -6,7 +6,8 @@
 data/
 # **/data/
 **/*.pth
-# logs/**
+figures/
+logs/**
 **/*.ckpt
 logs/**/lightning_logs
 logs/lcc2siwm/lightning_logs
