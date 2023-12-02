@@ -12,6 +12,10 @@ logs/**
 logs/**/lightning_logs
 logs/lcc2siwm/lightning_logs
 
+# Vim
+**/*.un~
+**/*~
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
